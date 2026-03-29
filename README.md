@@ -87,3 +87,7 @@ python NovelHelper.py     # Python版
 ***
 
 **License: MIT**
+
+
+
+**Made by Vibe Coding**
