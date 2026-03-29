@@ -57,15 +57,39 @@ except ImportError:
     sys.exit(1)
 
 class FileManager:
-    @staticmethod
-    def get_chapter_number(filename):
+    _current_lang = 'zh_CN'
+    _custom_export_format = None
+    _custom_detect_formats = None
+    _custom_export_volume_format = None
+    _custom_export_chapter_format = None
+
+    @classmethod
+    def set_language(cls, lang):
+        cls._current_lang = lang
+        cls._load_custom_formats()
+
+    @classmethod
+    def _load_custom_formats(cls):
+        """从配置文件加载自定义格式"""
+        config = ConfigManager.load_config()
+        cls._custom_export_format = config.get('Format', 'export_format', fallback=None)
+        detect_str = config.get('Format', 'detect_formats', fallback=None)
+        if detect_str:
+            cls._custom_detect_formats = [f.strip() for f in detect_str.split('|')]
+        else:
+            cls._custom_detect_formats = None
+        cls._custom_export_volume_format = config.get('Format', 'export_volume_format', fallback=None)
+        cls._custom_export_chapter_format = config.get('Format', 'export_chapter_format', fallback=None)
+
+    @classmethod
+    def get_chapter_number(cls, filename):
         match = re.match(r'^(\d+)', filename)
         if match:
             return int(match.group(1))
         return None
 
-    @staticmethod
-    def find_latest_chapter(folder_path):
+    @classmethod
+    def find_latest_chapter(cls, folder_path):
         try:
             files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
             if not files:
@@ -73,7 +97,7 @@ class FileManager:
             max_num = 0
             latest_file = None
             for f in files:
-                num = FileManager.get_chapter_number(f)
+                num = cls.get_chapter_number(f)
                 if num and num > max_num:
                     max_num = num
                     latest_file = f
@@ -81,24 +105,214 @@ class FileManager:
         except Exception:
             return None
 
-    @staticmethod
-    def find_next_chapter_in_all(target_chapter_num):
+    @classmethod
+    def _format_chapter(cls, fmt, chapter_num, name=""):
+        """根据格式字符串格式化章节名
+        格式：
+        {num}=阿拉伯数字(硬编码)
+        {cn.up.Chapter}=第壹佰伍拾叁章
+        {cn.low.Chapter}=第一百五十三章
+        {cn.num.Chapter}=第153章
+        {en.Chapter}=Chapter153
+        {jp.Chapter}=第一百五十三章
+        {name}=后缀
+        """
+        num_str = str(chapter_num)
+        zh_num_low = cls.num_to_chinese(chapter_num)  # 小写：一百五十三
+        zh_num_up = cls.num_to_chinese_upper(chapter_num)  # 大写：壹佰伍拾叁
+
+        # 先替换语言格式
+        result = fmt.replace('{cn.up.Chapter}', f'第{zh_num_up}章')
+        result = result.replace('{cn.low.Chapter}', f'第{zh_num_low}章')
+        result = result.replace('{cn.num.Chapter}', f'第{num_str}章')
+        result = result.replace('{en.Chapter}', f'Chapter{num_str}')
+        result = result.replace('{jp.Chapter}', f'第{zh_num_low}章')
+
+        # 替换 {num} 在最前面
+        result = num_str + result.replace('{num}', '')
+
+        # 替换 {name} 为后缀
+        if name:
+            if '{name}' in result:
+                result = result.replace('{name}', name)
+            elif '_' in result:
+                # 如果有下划线，在下划线后加后缀
+                if not result.rstrip().endswith('_'):
+                    result = result + name
+            else:
+                # 没有下划线也没有{name}，直接加下划线+后缀
+                result = result + '_' + name
+        else:
+            # 没有后缀，移除末尾的下划线
+            result = result.rstrip('_')
+
+        return result
+
+    @classmethod
+    def generate_chapter_name(cls, chapter_num, name="", include_prefix=True):
+        """根据当前语言生成章节名称，支持自定义格式"""
+        if cls._custom_export_format:
+            fmt = cls._custom_export_format
+            result = cls._format_chapter(fmt, chapter_num, name)
+            if not include_prefix:
+                # 移除开头的数字
+                import re
+                result = re.sub(r'^\d+', '', result)
+            return result
+
+        lang = cls._current_lang
+        num_str = str(chapter_num)
+
+        if lang == 'zh_CN':
+            chapter_word = cls.num_to_chinese(chapter_num) + "章"
+            prefix = f"{num_str}第" if include_prefix else ""
+            return f"{prefix}{chapter_word}_{name}"
+        elif lang == 'en_US':
+            chapter_word = f"Chapter{chapter_num}"
+            prefix = f"{num_str}[" if include_prefix else "["
+            suffix = f"]{name}" if name else "]"
+            return f"{prefix}{chapter_word}{suffix}"
+        elif lang == 'ja_JP':
+            chapter_word = cls.num_to_chinese(chapter_num) + "章"
+            prefix = f"{num_str}第" if include_prefix else ""
+            return f"{prefix}{chapter_word}_{name}"
+        else:
+            chapter_word = cls.num_to_chinese(chapter_num) + "章"
+            prefix = f"{num_str}第" if include_prefix else ""
+            return f"{prefix}{chapter_word}_{name}"
+
+    @classmethod
+    def _format_export(cls, fmt, num, name="", word_count=None):
+        """导出格式化方法
+        格式变量：{cn.up.Volume},{cn.low.Volume},{cn.num.Volume},{en.Volume},{jp.Volume}
+                  {cn.up.Chapter},{cn.low.Chapter},{cn.num.Chapter},{en.Chapter},{jp.Chapter}
+                  {num},{name},{word_count}
+        特殊：_ 在语言格式和 name 之间时自动转为 ·
+        """
+        num_str = str(num)
+        zh_num_low = cls.num_to_chinese(num)
+        zh_num_up = cls.num_to_chinese_upper(num)
+
+        result = fmt
+        result = result.replace('{cn.up.Volume}', f'第{zh_num_up}卷')
+        result = result.replace('{cn.low.Volume}', f'第{zh_num_low}卷')
+        result = result.replace('{cn.num.Volume}', f'第{num_str}卷')
+        result = result.replace('{en.Volume}', f'Volume{num_str}')
+        result = result.replace('{jp.Volume}', f'第{zh_num_low}巻')
+
+        result = result.replace('{cn.up.Chapter}', f'第{zh_num_up}章')
+        result = result.replace('{cn.low.Chapter}', f'第{zh_num_low}章')
+        result = result.replace('{cn.num.Chapter}', f'第{num_str}章')
+        result = result.replace('{en.Chapter}', f'Chapter{num_str}')
+        result = result.replace('{jp.Chapter}', f'第{zh_num_low}章')
+
+        result = result.replace('{num}', num_str)
+
+        if word_count is not None:
+            result = result.replace('{word_count}', str(word_count))
+
+        if name:
+            result = result.replace('{name}', name)
+            result = result.replace('_', '·')
+        else:
+            result = result.replace('{name}', '')
+            result = result.replace('_', '·')
+
+        return result
+
+    @classmethod
+    def format_volume_title_export(cls, volume_num, volume_name, word_count):
+        """导出卷标题格式化"""
+        export_fmt = cls._custom_export_volume_format
+        if export_fmt:
+            return cls._format_export(export_fmt, volume_num, volume_name, word_count)
+        return f'-----【第{volume_num}卷·{volume_name}:{word_count}】-----'
+
+    @classmethod
+    def format_chapter_title_export(cls, chapter_num, chapter_name):
+        """导出章节标题格式化"""
+        export_fmt = cls._custom_export_chapter_format
+        if export_fmt:
+            return cls._format_export(export_fmt, chapter_num, chapter_name)
+        return f'-----【第{chapter_num}章-{chapter_name}】-----'
+
+    @classmethod
+    def find_next_chapter_in_all(cls, target_chapter_num):
+        """在 all 目录中查找指定章节的模板文件，支持自定义检测格式"""
         try:
-            chinese_num = an2cn(str(target_chapter_num)) + "章"
-            target_filename = f"{target_chapter_num}第{chinese_num}_name.txt"
-            target_path = os.path.join(ALL_DIR, target_filename)
-            if os.path.exists(target_path):
-                return target_path, target_chapter_num
+            possible_filenames = []
+
+            if cls._custom_detect_formats:
+                for fmt in cls._custom_detect_formats:
+                    filename = cls._format_chapter(fmt, target_chapter_num, "name")
+                    if not filename.endswith('.txt'):
+                        filename += '.txt'
+                    possible_filenames.append(filename)
+            else:
+                lang = cls._current_lang
+                if lang == 'zh_CN':
+                    chinese_num = cls.num_to_chinese(target_chapter_num) + "章"
+                    possible_filenames.append(f"{target_chapter_num}第{chinese_num}_name.txt")
+                    possible_filenames.append(f"{target_chapter_num}第{chinese_num}_.txt")
+                elif lang == 'en_US':
+                    possible_filenames.append(f"{target_chapter_num}[Chapter{target_chapter_num}]_name.txt")
+                    possible_filenames.append(f"{target_chapter_num}[Chapter{target_chapter_num}]_.txt")
+                elif lang == 'ja_JP':
+                    chinese_num = cls.num_to_chinese(target_chapter_num) + "章"
+                    possible_filenames.append(f"{target_chapter_num}第{chinese_num}_name.txt")
+                    possible_filenames.append(f"{target_chapter_num}第{chinese_num}_.txt")
+
+            for filename in possible_filenames:
+                target_path = os.path.join(ALL_DIR, filename)
+                if os.path.exists(target_path):
+                    return target_path, target_chapter_num
+
+            if lang != 'zh_CN':
+                chinese_num = cls.num_to_chinese(target_chapter_num) + "章"
+                target_filename = f"{target_chapter_num}第{chinese_num}_name.txt"
+                target_path = os.path.join(ALL_DIR, target_filename)
+                if os.path.exists(target_path):
+                    return target_path, target_chapter_num
+
             return None, target_chapter_num
         except Exception:
             return None, target_chapter_num
 
-    @staticmethod
-    def get_folder_number(folder_name):
+    @classmethod
+    def get_folder_number(cls, folder_name):
         match = re.match(r'^(\d+)\[', folder_name)
         if match:
             return int(match.group(1))
         return None
+
+    @classmethod
+    def extract_volume_name(cls, folder_name):
+        """从文件夹名提取卷名称（如 '第一卷' 或 'Volume One'）"""
+        match = re.search(r'\[(.+?)\]', folder_name)
+        if match:
+            return match.group(1)
+        return None
+
+    @classmethod
+    def format_chapter_title(cls, chapter_num, chapter_name=""):
+        """根据当前语言格式化章节标题"""
+        lang = cls._current_lang
+
+        if lang == 'zh_CN':
+            chinese_num = cls.num_to_chinese(chapter_num)
+            return f"-----【第{chapter_num}章-{chapter_name}】-----"
+        elif lang == 'en_US':
+            return f"-----【Chapter {chapter_num}-{chapter_name}】-----"
+        elif lang == 'ja_JP':
+            japanese_num = cls.num_to_chinese(chapter_num)
+            return f"-----【第{chapter_num}章-{chapter_name}】-----"
+        else:
+            return f"-----【第{chapter_num}章-{chapter_name}】-----"
+
+    @classmethod
+    def replace_dash_with_space(cls, text):
+        """将 '-' 替换为空格（用于英文格式）"""
+        return text.replace('-', ' ')
 
     @staticmethod
     def is_default_content(file_path):
@@ -112,8 +326,8 @@ class FileManager:
         except Exception:
             return False
 
-    @staticmethod
-    def get_word_count(file_path):
+    @classmethod
+    def get_word_count(cls, file_path):
         if not os.path.exists(file_path):
             return 0, "文件不存在"
         try:
@@ -131,20 +345,20 @@ class FileManager:
         except Exception:
             return 0
 
-    @staticmethod
-    def get_folder_files(folder_path):
+    @classmethod
+    def get_folder_files(cls, folder_path):
         try:
-            files = sorted([f for f in os.listdir(folder_path) if f.endswith('.txt')], 
-                          key=lambda x: (FileManager.get_folder_number(x) is None, FileManager.get_chapter_number(x) or float('inf')))
+            files = sorted([f for f in os.listdir(folder_path) if f.endswith('.txt')],
+                          key=lambda x: (cls.get_folder_number(x) is None, cls.get_chapter_number(x) or float('inf')))
             return files
         except Exception:
             return []
 
-    @staticmethod
-    def copy_and_rename_internal(source_path, dest_folder, chapter_num):
+    @classmethod
+    def copy_and_rename_internal(cls, source_path, dest_folder, chapter_num):
         try:
-            chinese_num = an2cn(str(chapter_num)) + "章"
-            new_filename = f"{chapter_num}第{chinese_num}_.txt"
+            new_filename = cls.generate_chapter_name(chapter_num, "", False)
+            new_filename = new_filename.rstrip('_') + '_.txt'
             dest_path = os.path.join(dest_folder, new_filename)
             if os.path.exists(dest_path):
                 return False, new_filename, "文件已存在"
@@ -153,21 +367,20 @@ class FileManager:
         except Exception as e:
             return False, None, str(e)
 
-    @staticmethod
-    def ensure_ahead_chapters_internal(folder_name, folder_path, current_max, messages, max_ahead_chapters=2):
+    @classmethod
+    def ensure_ahead_chapters_internal(cls, folder_name, folder_path, current_max, messages, max_ahead_chapters=2):
         added_count = 0
         added_files = []
         for add_num in range(current_max + 1, current_max + max_ahead_chapters + 1):
-            chinese_num = an2cn(str(add_num)) + "章"
-            target_filename = f"{add_num}第{chinese_num}_.txt"
+            target_filename = cls.generate_chapter_name(add_num, "", False).rstrip('_') + '_.txt'
             target_path = os.path.join(folder_path, target_filename)
-            
+
             if os.path.exists(target_path):
                 continue
-            
-            source_path, _ = FileManager.find_next_chapter_in_all(add_num)
+
+            source_path, _ = cls.find_next_chapter_in_all(add_num)
             if source_path:
-                success, new_filename, error = FileManager.copy_and_rename_internal(source_path, folder_path, add_num)
+                success, new_filename, error = cls.copy_and_rename_internal(source_path, folder_path, add_num)
                 if success:
                     added_count += 1
                     added_files.append(new_filename)
@@ -187,22 +400,36 @@ class FileManager:
         return an2cn(str(num))
 
     @staticmethod
+    def num_to_chinese_upper(num):
+        """数字转中文大写"""
+        chinese_lower = an2cn(str(num))
+        mapping = {
+            '零': '零', '一': '壹', '二': '贰', '三': '叁', '四': '肆',
+            '五': '伍', '六': '陆', '七': '柒', '八': '捌', '九': '玖',
+            '十': '拾', '百': '佰', '千': '仟', '万': '萬', '亿': '億'
+        }
+        result = ""
+        for char in chinese_lower:
+            result += mapping.get(char, char)
+        return result
+
+    @staticmethod
     def convert_num_to_chinese(num):
         """统一数字转中文（带章） - 使用an2cn"""
         return an2cn(str(num)) + "章"
-    
-    @staticmethod
-    def is_numeric_volume_folder(folder_name):
+
+    @classmethod
+    def is_numeric_volume_folder(cls, folder_name):
         match = re.match(r'^(\d+)', folder_name)
         return match is not None
-    
-    @staticmethod
-    def get_volume_number(folder_name):
+
+    @classmethod
+    def get_volume_number(cls, folder_name):
         match = re.match(r'^(\d+)', folder_name)
         if match:
             return int(match.group(1))
         return None
-    
+
     @staticmethod
     def is_old_volume(folder_name):
         return '[old_' in folder_name
@@ -307,6 +534,15 @@ class ConfigManager:
             config.write(f)
         cls._cache_dirty = True
 
+    @classmethod
+    def remove_option(cls, section, key):
+        config = cls._load_config_internal()
+        if config.has_option(section, key):
+            config.remove_option(section, key)
+            with open(cls.CONFIG_FILE, 'w', encoding='utf-8') as f:
+                config.write(f)
+            cls._cache_dirty = True
+
 
 class LanguageManager:
     _current_lang = None
@@ -381,6 +617,15 @@ class LanguageManager:
             'area_scale': '面积缩放倍数',
             'height_scale': '高度缩放倍数',
             'font_increment': '字号增加量',
+            'format_config': '格式配置',
+            'export_filename_format': '文件名格式',
+            'export_volume_format': '卷标题格式',
+            'export_chapter_format': '章节标题格式',
+            'format_help_filename': '格式：{num}=数字、{cn.up.Chapter}=第壹佰伍拾叁章、{cn.low.Chapter}=第一百五十三章、{cn.num.Chapter}=第153章、{en.Chapter}=Chapter153、{jp.Chapter}=第一百五十三章、{name}=后缀',
+            'format_help_volume': '格式：{cn.up.Volume}=第壹佰伍拾叁卷、{cn.low.Volume}=第一百五十三卷、{cn.num.Volume}=第153卷、{en.Volume}=Volume153、{jp.Volume}=第一百五十三巻、{name}=卷名、{word_count}=字数 | _在语言格式和{name}之间时自动转为·',
+            'format_help_chapter': '格式：{cn.up.Chapter}=第壹佰伍拾叁章、{cn.low.Chapter}=第一百五十三章、{cn.num.Chapter}=第153章、{en.Chapter}=Chapter153、{jp.Chapter}=第一百五十三章、{name}=后缀 | _在语言格式和{name}之间时自动转为·',
+            'preview_color': '预览颜色',
+            'preview_font_size': '预览字号',
             'language_config': '语言配置',
             'select_language': '选择语言',
             'tip_change_language': '提示：切换语言后点击「保存并应用」生效',
@@ -590,6 +835,15 @@ NovelStorage/
             'area_scale': 'Area Scale Factor',
             'height_scale': 'Height Scale Factor',
             'font_increment': 'Font Size Increment',
+            'format_config': 'Format Configuration',
+            'export_filename_format': 'Filename Format',
+            'export_volume_format': 'Volume Title Format',
+            'export_chapter_format': 'Chapter Title Format',
+            'format_help_filename': 'Format: {num}=num, {cn.up.Chapter}=第壹佰伍拾叁章, {cn.low.Chapter}=第一百五十三章, {cn.num.Chapter}=第153章, {en.Chapter}=Chapter153, {jp.Chapter}=第一百五十三章, {name}=suffix',
+            'format_help_volume': 'Format: {cn.up.Volume}=第壹佰伍拾叁卷, {cn.low.Volume}=第一百五十三卷, {cn.num.Volume}=第153卷, {en.Volume}=Volume153, {jp.Volume}=第一百五十三巻, {name}=name, {word_count}=count | _ between lang format and {name} auto to ·',
+            'format_help_chapter': 'Format: {cn.up.Chapter}=第壹佰伍拾叁章, {cn.low.Chapter}=第一百五十三章, {cn.num.Chapter}=第153章, {en.Chapter}=Chapter153, {jp.Chapter}=第一百五十三章, {name}=suffix | _ between lang format and {name} auto to ·',
+            'preview_color': 'Preview Color',
+            'preview_font_size': 'Preview Font Size',
             'language_config': 'Language Configuration',
             'select_language': 'Select Language',
             'tip_change_language': 'Tip: Click Save & Apply after changing language',
@@ -799,6 +1053,15 @@ NovelStorage/
             'area_scale': '面積倍率',
             'height_scale': '高さ倍率',
             'font_increment': 'フォントサイズ増分',
+            'format_config': 'フォーマット設定',
+            'export_filename_format': 'ファイル名形式',
+            'export_volume_format': '巻タイトル形式',
+            'export_chapter_format': '章タイトル形式',
+            'format_help_filename': '形式：{num}=数字、{cn.up.Chapter}=第壹佰伍拾叁章、{cn.low.Chapter}=第一百五十三章、{cn.num.Chapter}=第153章、{en.Chapter}=Chapter153、{jp.Chapter}=第一百五十三章、{name}=接尾辞',
+            'format_help_volume': '形式：{cn.up.Volume}=第壹佰伍拾叁巻、{cn.low.Volume}=第一百五十三巻、{cn.num.Volume}=第153巻、{en.Volume}=Volume153、{jp.Volume}=第一百五十三巻、{name}=巻名、{word_count}=文字数 | _ は言語形式と{name}の間で自動的に·に変換',
+            'format_help_chapter': '形式：{cn.up.Chapter}=第壹佰伍拾叁章、{cn.low.Chapter}=第一百五十三章、{cn.num.Chapter}=第153章、{en.Chapter}=Chapter153、{jp.Chapter}=第一百五十三章、{name}=接尾辞 | _ は言語形式と{name}の間で自動的に·に変換',
+            'preview_color': 'プレビュー色',
+            'preview_font_size': 'プレビューフォントサイズ',
             'language_config': '言語設定',
             'select_language': '言語を選択',
             'tip_change_language': 'ヒント：言語変更後は「保存して適用」をクリック',
@@ -1479,6 +1742,7 @@ class NovelHelper(QMainWindow):
         self.all_widgets = []
         self.language_widgets = {}
         self.load_config_values()
+        FileManager.set_language(LanguageManager.get_current_language())
         self.current_area_level = 0
         self.current_height_level = 0
         self.all_messages = []
@@ -1492,6 +1756,45 @@ class NovelHelper(QMainWindow):
         self.setWindowTitle(LanguageManager.tr("app_title"))
         logger.info("NovelHelper 启动成功")
     
+    def update_format_preview(self):
+        filename_fmt = self.config_export_format.text().strip()
+        if filename_fmt:
+            try:
+                preview = FileManager._format_chapter(filename_fmt, 3, "name") + ".txt"
+                self.config_export_format_preview.setText(f"预览: {preview}")
+            except Exception:
+                self.config_export_format_preview.setText("格式错误")
+        else:
+            self.config_export_format_preview.setText("")
+
+        vol_fmt = self.config_export_volume_format.text().strip()
+        if vol_fmt:
+            try:
+                preview = FileManager._format_export(vol_fmt, 1, "潜龙在渊", 37523)
+                self.config_export_volume_preview.setText(f"预览: {preview}")
+            except Exception:
+                self.config_export_volume_preview.setText("格式错误")
+        else:
+            self.config_export_volume_preview.setText("")
+
+        chapter_fmt = self.config_export_chapter_format.text().strip()
+        if chapter_fmt:
+            try:
+                preview = FileManager._format_export(chapter_fmt, 3, "回家")
+                self.config_export_chapter_preview.setText(f"预览: {preview}")
+            except Exception:
+                self.config_export_chapter_preview.setText("格式错误")
+        else:
+            self.config_export_chapter_preview.setText("")
+
+    def update_preview_style(self):
+        color = self.config_preview_color.text().strip() or "#FFFFFF"
+        font_size = self.config_preview_font_size.value()
+        style = f"color: {color}; font-size: {font_size}px; font-weight: bold;"
+        self.config_export_format_preview.setStyleSheet(style)
+        self.config_export_volume_preview.setStyleSheet(style)
+        self.config_export_chapter_preview.setStyleSheet(style)
+
     def update_ui_language(self):
         self.setWindowTitle(LanguageManager.tr("app_title"))
         self.btn_create_env.setText(LanguageManager.tr("create_runtime_env"))
@@ -1620,8 +1923,28 @@ class NovelHelper(QMainWindow):
             self.config_height_scale_label.setText(LanguageManager.tr("height_scale"))
         if hasattr(self, 'config_font_increase_label'):
             self.config_font_increase_label.setText(LanguageManager.tr("font_increment"))
+        if hasattr(self, 'config_format_group'):
+            self.config_format_group.setTitle(LanguageManager.tr("format_config"))
+        if hasattr(self, 'config_export_format_label'):
+            self.config_export_format_label.setText(LanguageManager.tr("export_filename_format"))
+        if hasattr(self, 'config_export_volume_format_label'):
+            self.config_export_volume_format_label.setText(LanguageManager.tr("export_volume_format"))
+        if hasattr(self, 'config_export_chapter_format_label'):
+            self.config_export_chapter_format_label.setText(LanguageManager.tr("export_chapter_format"))
+        if hasattr(self, 'config_export_format_help'):
+            self.config_export_format_help.setText(LanguageManager.tr("format_help_filename"))
+        if hasattr(self, 'config_export_volume_help'):
+            self.config_export_volume_help.setText(LanguageManager.tr("format_help_volume"))
+        if hasattr(self, 'config_export_chapter_help'):
+            self.config_export_chapter_help.setText(LanguageManager.tr("format_help_chapter"))
+        if hasattr(self, 'config_preview_color_label'):
+            self.config_preview_color_label.setText(LanguageManager.tr("preview_color"))
+        if hasattr(self, 'config_preview_font_size_label'):
+            self.config_preview_font_size_label.setText(LanguageManager.tr("preview_font_size"))
         if hasattr(self, 'config_language_group'):
             self.config_language_group.setTitle(LanguageManager.tr("language_config"))
+        if hasattr(self, 'config_format_preview'):
+            self.update_format_preview()
         if hasattr(self, 'config_language_label'):
             self.config_language_label.setText(LanguageManager.tr("select_language"))
         if hasattr(self, 'config_language_note'):
@@ -2099,8 +2422,7 @@ QComboBox QAbstractItemView {{
             count = 0
             existing_count = 0
             for i in range(start, end + 1):
-                chinese_num = FileManager.convert_num_to_chinese(i)
-                filename = f"{i}第{chinese_num}_{suffix}.txt"
+                filename = FileManager.generate_chapter_name(i, suffix) + ".txt"
                 file_path = os.path.join(output, filename)
                 
                 if os.path.exists(file_path):
@@ -2250,7 +2572,7 @@ QComboBox QAbstractItemView {{
                             
                             file_base = os.path.splitext(file)[0]
                             chapter_name = file_base[len(num_str):].strip()
-                            chapter_title = f"-----【第{num}章-{chapter_name}】-----"
+                            chapter_title = FileManager.format_chapter_title(num, chapter_name)
                             
                             volume_content[volume_num].append((chapter_title, content, volume_name))
                     except Exception as e:
@@ -2268,9 +2590,9 @@ QComboBox QAbstractItemView {{
                 for vol_num in sorted(volume_content):
                     chapters = volume_content[vol_num]
                     vol_name = chapters[0][2]
-                    chinese_vol = FileManager.num_to_chinese(vol_num)
                     vol_word_count = volume_non_blank_count[vol_num]
-                    vol_title = f"-----【第{chinese_vol}卷{f'·{vol_name}' if vol_name else ''}: {vol_word_count}】-----"
+                    folder_path_abs, dir_name = volume_folder_paths[vol_num]
+                    vol_title = FileManager.format_volume_title_export(vol_num, vol_name, vol_word_count)
                     buffer.extend(["\n\n", vol_title, "\n\n"])
                     for title, content, _ in chapters:
                         buffer.extend(["\n\n", title, "\n\n", content, "\n"])
@@ -2487,7 +2809,71 @@ QComboBox QAbstractItemView {{
         
         self.config_adaptive_group.setLayout(adaptive_form)
         config_layout.addWidget(self.config_adaptive_group)
-        
+
+        self.config_format_group = QGroupBox(LanguageManager.tr("format_config"))
+        format_form = QFormLayout()
+
+        self.config_export_format = QLineEdit()
+        self.config_export_format.setText(ConfigManager.get('Format', 'export_format', fallback=''))
+        self.config_export_format.textChanged.connect(self.update_format_preview)
+        self.config_export_format_label = QLabel(LanguageManager.tr("export_filename_format"))
+        format_form.addRow(self.config_export_format_label, self.config_export_format)
+
+        self.config_export_format_help = QLabel(LanguageManager.tr("format_help_filename"))
+        self.config_export_format_help.setStyleSheet("color: #888888; font-size: 23px;")
+        self.config_export_format_help.setWordWrap(True)
+        format_form.addRow("", self.config_export_format_help)
+
+        self.config_export_format_preview = QLabel("")
+        self.config_export_format_preview.setStyleSheet("color: #FFFFFF; font-size: 23px; font-weight: bold;")
+        format_form.addRow("", self.config_export_format_preview)
+
+        self.config_export_volume_format = QLineEdit()
+        self.config_export_volume_format.setText(ConfigManager.get('Format', 'export_volume_format', fallback=''))
+        self.config_export_volume_format.textChanged.connect(self.update_format_preview)
+        self.config_export_volume_format_label = QLabel(LanguageManager.tr("export_volume_format"))
+        format_form.addRow(self.config_export_volume_format_label, self.config_export_volume_format)
+
+        self.config_export_volume_help = QLabel(LanguageManager.tr("format_help_volume"))
+        self.config_export_volume_help.setStyleSheet("color: #888888; font-size: 23px;")
+        self.config_export_volume_help.setWordWrap(True)
+        format_form.addRow("", self.config_export_volume_help)
+
+        self.config_export_volume_preview = QLabel("")
+        self.config_export_volume_preview.setStyleSheet("color: #FFFFFF; font-size: 23px; font-weight: bold;")
+        format_form.addRow("", self.config_export_volume_preview)
+
+        self.config_export_chapter_format = QLineEdit()
+        self.config_export_chapter_format.setText(ConfigManager.get('Format', 'export_chapter_format', fallback=''))
+        self.config_export_chapter_format.textChanged.connect(self.update_format_preview)
+        self.config_export_chapter_format_label = QLabel(LanguageManager.tr("export_chapter_format"))
+        format_form.addRow(self.config_export_chapter_format_label, self.config_export_chapter_format)
+
+        self.config_export_chapter_help = QLabel(LanguageManager.tr("format_help_chapter"))
+        self.config_export_chapter_help.setStyleSheet("color: #888888; font-size: 23px;")
+        self.config_export_chapter_help.setWordWrap(True)
+        format_form.addRow("", self.config_export_chapter_help)
+
+        self.config_export_chapter_preview = QLabel("")
+        self.config_export_chapter_preview.setStyleSheet("color: #FFFFFF; font-size: 23px; font-weight: bold;")
+        format_form.addRow("", self.config_export_chapter_preview)
+
+        self.config_preview_color = QLineEdit()
+        self.config_preview_color.setText(ConfigManager.get('Format', 'preview_color', fallback='#FFFFFF'))
+        self.config_preview_color.textChanged.connect(self.update_preview_style)
+        self.config_preview_color_label = QLabel(LanguageManager.tr("preview_color"))
+        format_form.addRow(self.config_preview_color_label, self.config_preview_color)
+
+        self.config_preview_font_size = QSpinBox()
+        self.config_preview_font_size.setRange(12, 48)
+        self.config_preview_font_size.setValue(ConfigManager.get_int('Format', 'preview_font_size', fallback=23))
+        self.config_preview_font_size.valueChanged.connect(self.update_preview_style)
+        self.config_preview_font_size_label = QLabel(LanguageManager.tr("preview_font_size"))
+        format_form.addRow(self.config_preview_font_size_label, self.config_preview_font_size)
+
+        self.config_format_group.setLayout(format_form)
+        config_layout.addWidget(self.config_format_group)
+
         self.config_language_group = QGroupBox(LanguageManager.tr("language_config"))
         language_form = QFormLayout()
         
@@ -2511,7 +2897,7 @@ QComboBox QAbstractItemView {{
         language_form.addRow(self.config_language_label, self.config_language)
         
         self.config_language_note = QLabel(LanguageManager.tr("tip_change_language"))
-        self.config_language_note.setStyleSheet("color: #888888; font-size: 12px;")
+        self.config_language_note.setStyleSheet("color: #888888; font-size: 23px;")
         language_form.addRow("", self.config_language_note)
         
         self.config_language_group.setLayout(language_form)
@@ -2533,6 +2919,10 @@ QComboBox QAbstractItemView {{
         
         scroll.setWidget(config_widget)
         layout.addWidget(scroll)
+        
+        # 初始化预览
+        self.update_format_preview()
+        self.update_preview_style()
         
         return widget
     
@@ -2561,12 +2951,35 @@ QComboBox QAbstractItemView {{
             ConfigManager.set('Adaptive', 'area_scale_factor', self.config_area_scale.value())
             ConfigManager.set('Adaptive', 'height_scale_factor', self.config_height_scale.text())
             ConfigManager.set('Adaptive', 'font_increase', self.config_font_increase.value())
-            
+
+            export_fmt = self.config_export_format.text().strip()
+            export_vol_fmt = self.config_export_volume_format.text().strip()
+            export_chapter_fmt = self.config_export_chapter_format.text().strip()
+            preview_color = self.config_preview_color.text().strip()
+            preview_font_size = self.config_preview_font_size.value()
+            if export_fmt:
+                ConfigManager.set('Format', 'export_format', export_fmt)
+            else:
+                ConfigManager.remove_option('Format', 'export_format')
+            if export_vol_fmt:
+                ConfigManager.set('Format', 'export_volume_format', export_vol_fmt)
+            else:
+                ConfigManager.remove_option('Format', 'export_volume_format')
+            if export_chapter_fmt:
+                ConfigManager.set('Format', 'export_chapter_format', export_chapter_fmt)
+            else:
+                ConfigManager.remove_option('Format', 'export_chapter_format')
+            ConfigManager.set('Format', 'preview_color', preview_color)
+            ConfigManager.set('Format', 'preview_font_size', preview_font_size)
+
+            FileManager._load_custom_formats()
+
             selected_lang = self.config_language.currentData()
             if selected_lang:
                 ConfigManager.set('Language', 'current', selected_lang)
                 LanguageManager._translations = {}
                 LanguageManager._current_lang = selected_lang
+                FileManager.set_language(selected_lang)
             
             QMessageBox.information(self, LanguageManager.tr("success"), LanguageManager.tr("config_saved_restart"))
             logger.info("Configuration saved")
@@ -2599,12 +3012,35 @@ QComboBox QAbstractItemView {{
             ConfigManager.set('Adaptive', 'area_scale_factor', self.config_area_scale.value())
             ConfigManager.set('Adaptive', 'height_scale_factor', self.config_height_scale.text())
             ConfigManager.set('Adaptive', 'font_increase', self.config_font_increase.value())
-            
+
+            export_fmt = self.config_export_format.text().strip()
+            export_vol_fmt = self.config_export_volume_format.text().strip()
+            export_chapter_fmt = self.config_export_chapter_format.text().strip()
+            preview_color = self.config_preview_color.text().strip()
+            preview_font_size = self.config_preview_font_size.value()
+            if export_fmt:
+                ConfigManager.set('Format', 'export_format', export_fmt)
+            else:
+                ConfigManager.remove_option('Format', 'export_format')
+            if export_vol_fmt:
+                ConfigManager.set('Format', 'export_volume_format', export_vol_fmt)
+            else:
+                ConfigManager.remove_option('Format', 'export_volume_format')
+            if export_chapter_fmt:
+                ConfigManager.set('Format', 'export_chapter_format', export_chapter_fmt)
+            else:
+                ConfigManager.remove_option('Format', 'export_chapter_format')
+            ConfigManager.set('Format', 'preview_color', preview_color)
+            ConfigManager.set('Format', 'preview_font_size', preview_font_size)
+
+            FileManager._load_custom_formats()
+
             selected_lang = self.config_language.currentData()
             if selected_lang:
                 ConfigManager.set('Language', 'current', selected_lang)
                 LanguageManager._translations = {}
                 LanguageManager._current_lang = selected_lang
+                FileManager.set_language(selected_lang)
             
             self.load_config_values()
             self.apply_stylesheet()
@@ -2936,22 +3372,20 @@ QComboBox QAbstractItemView {{
                 logger.info(f"创建目录: {title_volume_dir}")
             
             QMessageBox.information(self, LanguageManager.tr("progress"), f"Generating {init_chapter_count} chapter templates...")
-            
+
             for i in range(1, init_chapter_count + 1):
-                chinese_num = FileManager.num_to_chinese(i)
-                filename = f"{i}第{chinese_num}章_name.txt"
+                filename = FileManager.generate_chapter_name(i, "name") + ".txt"
                 file_path = os.path.join(all_dir, filename)
                 if not os.path.exists(file_path):
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(f"第{i}个文件\n")
-            
+
             logger.info(f"已在 all/ 生成 {init_chapter_count} 章模板")
-            
+
             for i in range(1, init_copy_count + 1):
-                chinese_num = FileManager.num_to_chinese(i)
-                source_filename = f"{i}第{chinese_num}章_name.txt"
+                source_filename = FileManager.generate_chapter_name(i, "name") + ".txt"
                 source_path = os.path.join(all_dir, source_filename)
-                dest_filename = f"{i}第{chinese_num}章_.txt"
+                dest_filename = FileManager.generate_chapter_name(i, "", False).rstrip('_') + "_.txt"
                 dest_path = os.path.join(title_volume_dir, dest_filename)
                 if os.path.exists(source_path) and not os.path.exists(dest_path):
                     shutil.copy2(source_path, dest_path)
