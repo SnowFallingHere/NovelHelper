@@ -15,40 +15,55 @@ from PyQt5.QtCore import QTimer, Qt, pyqtSignal, QThread, QSize, QSettings, QEve
 from PyQt5.QtGui import QFont, QColor, QTextCharFormat, QPalette
 
 def get_base_dir():
-    """获取根目录 - NovelStorage目录"""
-    script_path = os.path.abspath(__file__)
-    current_dir = os.path.dirname(script_path)
-    
-    while current_dir:
-        if os.path.basename(current_dir) == "novel":
-            return os.path.dirname(current_dir)
-        parent = os.path.dirname(current_dir)
-        if parent == current_dir:
-            break
-        current_dir = parent
-    
-    return None
+    """获取程序根目录 - 脚本所在目录，兼容打包环境"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    else:
+        script_path = os.path.abspath(__file__)
+        return os.path.dirname(script_path)
 
-NOVEL_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = get_base_dir() or os.path.dirname(NOVEL_DIR)
-ALL_DIR = os.path.join(BASE_DIR, "all") if BASE_DIR else os.path.join(os.path.dirname(NOVEL_DIR), "all")
-LOG_DIR = os.path.join(NOVEL_DIR, "log")
+SCRIPT_DIR = get_base_dir()
+
+def get_log_dir():
+    """获取日志目录"""
+    log_dir = os.path.join(get_base_dir(), "log")
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir, exist_ok=True)
+    return log_dir
 
 UI_REFRESH_INTERVAL = 500
 
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+# 延迟初始化日志配置
+def setup_logging():
+    log_dir = get_log_dir()
+    log_file = os.path.join(log_dir, f"NovelHelper_{datetime.now().strftime('%Y%m%d')}.log")
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file, encoding='utf-8'),
+            logging.StreamHandler()
+        ]
+    )
 
-log_file = os.path.join(LOG_DIR, f"NovelHelper_{datetime.now().strftime('%Y%m%d')}.log")
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
+setup_logging()
 logger = logging.getLogger(__name__)
+
+def get_novel_dir():
+    """获取小说目录 - 优先从配置读取，否则使用脚本所在目录"""
+    try:
+        config = ConfigManager.load_config()
+        custom_novel_dir = config.get('Monitor', 'novel_dir', fallback='')
+        if custom_novel_dir and os.path.isdir(custom_novel_dir):
+            return custom_novel_dir
+    except Exception:
+        pass
+    return SCRIPT_DIR
+
+def get_all_dir():
+    """获取 all/ 目录 - 在小说目录下"""
+    novel_dir = get_novel_dir()
+    return os.path.join(novel_dir, "all")
 
 try:
     from cn2an import an2cn
@@ -263,14 +278,14 @@ class FileManager:
                     possible_filenames.append(f"{target_chapter_num}第{chinese_num}_.txt")
 
             for filename in possible_filenames:
-                target_path = os.path.join(ALL_DIR, filename)
+                target_path = os.path.join(get_all_dir(), filename)
                 if os.path.exists(target_path):
                     return target_path, target_chapter_num
 
             if lang != 'zh_CN':
                 chinese_num = cls.num_to_chinese(target_chapter_num) + "章"
                 target_filename = f"{target_chapter_num}第{chinese_num}_name.txt"
-                target_path = os.path.join(ALL_DIR, target_filename)
+                target_path = os.path.join(get_all_dir(), target_filename)
                 if os.path.exists(target_path):
                     return target_path, target_chapter_num
 
@@ -357,7 +372,7 @@ class FileManager:
     @classmethod
     def copy_and_rename_internal(cls, source_path, dest_folder, chapter_num):
         try:
-            new_filename = cls.generate_chapter_name(chapter_num, "", False)
+            new_filename = cls.generate_chapter_name(chapter_num, "", include_prefix=True)
             new_filename = new_filename.rstrip('_') + '_.txt'
             dest_path = os.path.join(dest_folder, new_filename)
             if os.path.exists(dest_path):
@@ -372,24 +387,22 @@ class FileManager:
         added_count = 0
         added_files = []
         for add_num in range(current_max + 1, current_max + max_ahead_chapters + 1):
-            target_filename = cls.generate_chapter_name(add_num, "", False).rstrip('_') + '_.txt'
+            target_filename = cls.generate_chapter_name(add_num, "", include_prefix=True).rstrip('_') + '_.txt'
             target_path = os.path.join(folder_path, target_filename)
 
             if os.path.exists(target_path):
                 continue
 
-            source_path, _ = cls.find_next_chapter_in_all(add_num)
-            if source_path:
-                success, new_filename, error = cls.copy_and_rename_internal(source_path, folder_path, add_num)
-                if success:
-                    added_count += 1
-                    added_files.append(new_filename)
-                else:
-                    if error == "文件已存在":
-                        logger.warning(f"{folder_name}: 复制第{add_num}章失败 - {error}")
-                    else:
-                        logger.error(f"{folder_name}: 复制第{add_num}章失败 - {error}")
-                    messages.append(f"[WARN] {folder_name}: 复制第{add_num}章失败")
+            try:
+                with open(target_path, 'w', encoding='utf-8') as f:
+                    f.write('')
+                added_count += 1
+                added_files.append(target_filename)
+                messages.append(f"[NEW] {folder_name}: 新增第{add_num}章")
+            except Exception as e:
+                logger.error(f"{folder_name}: 创建第{add_num}章失败 - {e}")
+                messages.append(f"[WARN] {folder_name}: 创建第{add_num}章失败")
+
         if added_count > 0:
             messages.append(f"[NEW] {folder_name}: 新增{added_count}章")
         return added_count
@@ -437,9 +450,25 @@ class FileManager:
 class ConfigManager:
     """配置管理器 - 负责加载、缓存和保存应用配置"""
     
-    CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "NovelHelper.ini")
     _config_cache = None
     _cache_dirty = False
+    
+    @staticmethod
+    def get_config_file_path():
+        """获取配置文件路径 - 兼容打包和开发环境"""
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_dir, "NovelHelper.ini")
+    
+    CONFIG_FILE = None
+    
+    @classmethod
+    def _get_config_file(cls):
+        if cls.CONFIG_FILE is None:
+            cls.CONFIG_FILE = cls.get_config_file_path()
+        return cls.CONFIG_FILE
     
     DEFAULT_CONFIG = {
         'UI': {
@@ -462,7 +491,8 @@ class ConfigManager:
         'Monitor': {
             'check_interval': '15',
             'max_ahead_chapters': '2',
-            'min_word_count': '20'
+            'min_word_count': '20',
+            'novel_dir': ''
         },
         'Adaptive': {
             'area_scale_factor': '2',
@@ -479,11 +509,12 @@ class ConfigManager:
     @classmethod
     def _load_config_internal(cls):
         config = configparser.ConfigParser()
-        if os.path.exists(cls.CONFIG_FILE):
-            config.read(cls.CONFIG_FILE, encoding='utf-8')
+        config_file = cls._get_config_file()
+        if os.path.exists(config_file):
+            config.read(config_file, encoding='utf-8')
         else:
             cls.create_default_config()
-            config.read(cls.CONFIG_FILE, encoding='utf-8')
+            config.read(config_file, encoding='utf-8')
         return config
     
     @classmethod
@@ -498,9 +529,10 @@ class ConfigManager:
         config = configparser.ConfigParser()
         for section, values in cls.DEFAULT_CONFIG.items():
             config[section] = values
-        with open(cls.CONFIG_FILE, 'w', encoding='utf-8') as f:
+        config_file = cls._get_config_file()
+        with open(config_file, 'w', encoding='utf-8') as f:
             config.write(f)
-        logger.info(f"已创建默认配置文件: {cls.CONFIG_FILE}")
+        logger.info(f"已创建默认配置文件: {config_file}")
         cls._cache_dirty = True
     
     @classmethod
@@ -530,7 +562,8 @@ class ConfigManager:
         if not config.has_section(section):
             config.add_section(section)
         config.set(section, key, str(value))
-        with open(cls.CONFIG_FILE, 'w', encoding='utf-8') as f:
+        config_file = cls._get_config_file()
+        with open(config_file, 'w', encoding='utf-8') as f:
             config.write(f)
         cls._cache_dirty = True
 
@@ -539,7 +572,8 @@ class ConfigManager:
         config = cls._load_config_internal()
         if config.has_option(section, key):
             config.remove_option(section, key)
-            with open(cls.CONFIG_FILE, 'w', encoding='utf-8') as f:
+            config_file = cls._get_config_file()
+            with open(config_file, 'w', encoding='utf-8') as f:
                 config.write(f)
             cls._cache_dirty = True
 
@@ -692,28 +726,37 @@ class LanguageManager:
             'start_program_now_question': '是否立即启动新程序？',
             'create_env_failed': '创建运行环境失败',
             'start_program_failed': '启动新程序失败',
-            'no_volume_folders': '未找到任何卷文件夹！',
+            'no_volume_folders': '没有找到卷文件夹！',
             'folder_exists': '文件夹 {0} 已存在！',
             'generating_chapters': '正在生成 {0} 章模板...',
-            'help_content': """【一、正确的放置位置
--------------------
-NovelHelper.py 必须放置在以下结构中：
-NovelStorage/
-├─ novel/
-│  ├─ 你的小说文件夹/
-│  │  ├─ 1[第一卷]/
-│  │  │  ├─ 1第...txt
-│  │  │  └─ ...
-│  │  ├─ 2[第二卷]/
-│  │  │  └─ ...
-│  │  └─ NovelHelper.py  ← 放在这里！
-│  └─ ...
-└─ all/  ← 素材库文件夹
+            'novel_dir': '小说目录:',
+            'select': '选择...',
+            'select_novel_directory': '选择小说目录',
+            'initialize_directory': '初始化目录',
+            'initialize_directory_msg': '目录为空或没有找到卷文件夹，是否自动初始化？\n\n将创建：\n  - 1[new_0]/ 目录（第一卷）\n  - 10个无内容章节\n\n继续吗？',
+            'check_directory_failed': '检查目录失败',
+            'initialize_complete': '目录初始化完成！',
+            'initialize_failed': '初始化目录失败',
+            'help_content': """【一、灵活的目录选择
+====================
+★ 程序可以放在任意位置，无需固定目录结构
+★ 通过GUI选择任意文件夹作为小说目录
+★ 自动初始化会在选定目录创建必要结构
 
-【二、功能说明
------------
+【二、首次设置步骤
+==================
+1. 启动程序
+2. 进入「参数配置」标签页
+3. 点击「小说目录」旁边的「选择...」按钮
+4. 选择你要存放小说的文件夹
+5. 如果文件夹为空，程序会询问是否自动初始化
+6. 选择「是」将自动创建：
+   - 1[new_0]/ 目录（第一卷，含10个空章节）
+
+【三、功能说明
+=============
 1. 创建章节
-   - 用于在 all 素材库中创建章节模板文件
+   - 用于在小说目录中创建章节模板文件
    - 起始和结束章节必须是正整数
    - 文件后缀默认为 "name"
    - 如果文件已存在会自动跳过
@@ -722,6 +765,7 @@ NovelStorage/
    - 统计所有卷目录
    - 合并章节为一个完整文件
    - 可选择是否重命名文件夹（加上字数后缀）
+   - 可自定义导出格式（见参数配置）
 
 3. 监控管理
    - 自动监控小说文件夹
@@ -729,43 +773,59 @@ NovelStorage/
    - 每到2的倍数章节自动触发Summary
    - 日志可筛选查看数量
 
-【三、注意事项与风险
--------------------
+4. 自动卷管理
+   - 创建新卷文件夹（点击「增加新卷」）
+   - 用字数标签标记旧卷 [old_XXXX]
+   - 用字数标签标记新卷 [new_XXXX]
+
+【四、目录结构
+=============
+程序可以适应任意目录结构。自动初始化后会创建：
+
+  your_folder/
+  ├─ 1[new_0]/         ← 第一卷（含10个空章节）
+  └─ NovelHelper.ini    ← 配置文件
+
+【五、文件夹命名规则
+====================
+卷文件夹：数字[卷名]
+  例如：1[第一卷]、2[第二卷]、1[new_0]、2[old_12345]
+
+章节文件：数字第...txt
+  例如：1第一章_name.txt、2第二章_.txt
+
+【六、注意事项与风险
+====================
 ⚠️  重要警告！
 
 1. 文件备份
    - 使用前务必备份重要数据！
-   - 建议将整个 NovelStorage 文件夹复制一份
    - 误操作可能导致文件被覆盖
 
-2. 文件夹命名格式
-   - 卷文件夹必须符合：数字[卷名]
-   - 例如：1[第一卷]、2[第二卷]
-   - 不符合格式的文件夹会被忽略
-
-3. 章节文件命名
-   - 章节文件必须符合：数字第...txt
-   - 例如：1第...txt、2第...txt
-   - 不符合格式的章节会被忽略
-
-4. 不要随意删除文件
+2. 不要随意删除文件
    - 监控运行时不要随意删除章节文件
    - 删除可能导致监控异常
    - 如需删除请先停止监控
 
-5. 权限问题
+3. 权限问题
    - 确保有文件夹和文件有读写权限
-   - 确保磁盘有足够空间
+   - 选择具有适当权限的目录
 
-6. Summary功能
-   - Summary会生成未定.txt
+4. Summary功能
+   - 会生成合并后的文本文件
    - 重命名模式会修改文件夹名
    - 使用前确认备份！
 
-7. 监控功能
-   - 监控每15秒检查一次
-   - 自动新增领先2章
-   - 默认内容字数超过20字触发
+5. 监控功能
+   - 监控每15秒检查一次（可配置）
+   - 自动新增领先2章（可配置）
+   - 默认内容字数超过20字触发（可配置）
+
+【七、多语言支持
+===============
+内置语言：简体中文、English、日本語
+
+在「参数配置」标签页切换语言，然后保存并重启生效。
 """,
         },
         'en_US': {
@@ -913,25 +973,34 @@ NovelStorage/
             'no_volume_folders': 'No volume folders found!',
             'folder_exists': 'Folder {0} already exists!',
             'generating_chapters': 'Generating {0} chapter templates...',
-            'help_content': """1. Correct Placement
--------------------
-NovelHelper.py must be placed in the following structure:
-NovelStorage/
-├─ novel/
-│  ├─ your_novel_folder/
-│  │  ├─ 1[Volume 1]/
-│  │  │  ├─ 1Chapter...txt
-│  │  │  └─ ...
-│  │  ├─ 2[Volume 2]/
-│  │  │  └─ ...
-│  │  └─ NovelHelper.py  ← Place here!
-│  └─ ...
-└─ all/  ← Material library folder
+            'novel_dir': 'Novel Directory:',
+            'select': 'Select...',
+            'select_novel_directory': 'Select Novel Directory',
+            'initialize_directory': 'Initialize Directory',
+            'initialize_directory_msg': 'Directory is empty or no volume folders found. Auto-initialize?\n\nWill create:\n  - 1[new_0]/ (Volume 1)\n  - 10 empty chapters\n\nContinue?',
+            'check_directory_failed': 'Check directory failed',
+            'initialize_complete': 'Directory initialization complete!',
+            'initialize_failed': 'Initialize directory failed',
+            'help_content': """【一、Flexible Directory Selection
+========================================
+★ Program can be placed anywhere - no fixed directory structure required
+★ Select any folder as your novel directory via GUI
+★ Auto-initialization creates necessary structure in selected directory
 
-2. Function Description
--------------------
+【二、First Time Setup
+=====================
+1. Launch the program
+2. Go to "Parameter Configuration" tab
+3. Click "Select..." button next to "Novel Directory"
+4. Choose your novel storage folder
+5. If the folder is empty, click "Yes" to auto-initialize
+6. Program will automatically create:
+   - 1[new_0]/ (Volume 1 with 10 empty chapters)
+
+【三、Function Description
+==========================
 1. Create Chapters
-   - Used to create chapter template files in the all material library
+   - Used to create chapter template files in the novel directory
    - Start and end chapters must be positive integers
    - Default file suffix is "name"
    - Automatically skips existing files
@@ -940,6 +1009,7 @@ NovelStorage/
    - Statistics all volume directories
    - Merges chapters into a complete file
    - Can choose whether to rename folders (add word count suffix)
+   - Customizable export format (see Parameter Configuration)
 
 3. Monitor Management
    - Automatically monitors novel folders
@@ -947,43 +1017,59 @@ NovelStorage/
    - Auto-triggers Summary at every multiple of 2 chapter
    - Logs can be filtered by count
 
-3. Notes and Risks
--------------------
+4. Auto Volume Management
+   - Create new volume folders (click "Add New Volume")
+   - Mark old volumes with word count tags [old_XXXX]
+   - Mark new volumes with word count tags [new_XXXX]
+
+【四、Directory Structure
+========================
+Program works with any directory. After auto-initialization:
+
+  your_folder/
+  ├─ 1[new_0]/         ← Volume 1 (with 10 empty chapters)
+  └─ NovelHelper.ini    ← Configuration file
+
+【五、Folder Naming Rules
+==========================
+Volume folders: number[volume name]
+  Example: 1[Volume 1]、2[Volume 2]、1[new_0]、2[old_12345]
+
+Chapter files: numberChapter...txt
+  Example: 1Chapter_name.txt、2Chapter_.txt
+
+【六、Notes and Risks
+=====================
 ⚠️  Important Warning!
 
 1. File Backup
    - Always backup important data before use!
-   - Recommend copying entire NovelStorage folder
    - Mistakes may overwrite files
 
-2. Folder Naming Format
-   - Volume folders must follow: number[volume name]
-   - Example: 1[Volume 1], 2[Volume 2]
-   - Folders not matching format are ignored
-
-3. Chapter File Naming
-   - Chapter files must follow: numberChapter...txt
-   - Example: 1Chapter...txt, 2Chapter...txt
-   - Chapters not matching format are ignored
-
-4. Don't Delete Files Arbitrarily
+2. Don't Delete Files Arbitrarily
    - Don't delete chapter files while monitor is running
    - Deletion may cause monitor anomalies
    - Stop monitor first if you need to delete
 
-5. Permissions Issues
+3. Permissions Issues
    - Ensure read/write permissions for folders and files
-   - Ensure sufficient disk space
+   - Choose a directory with proper permissions
 
-6. Summary Function
-   - Summary generates pending.txt
+4. Summary Function
+   - Generates merged text file
    - Rename mode modifies folder names
    - Confirm backup before use!
 
-7. Monitor Function
-   - Monitor checks every 15 seconds
-   - Auto-adds 2 leading chapters
-   - Triggers when default content exceeds 20 words
+5. Monitor Function
+   - Monitor checks every 15 seconds (configurable)
+   - Auto-adds 2 leading chapters (configurable)
+   - Triggers when default content exceeds 20 words (configurable)
+
+【七、Multi-Language Support
+=============================
+Built-in languages: English, 简体中文, 日本語
+
+Switch language in "Parameter Configuration" tab, then save and restart.
 """,
         },
         'ja_JP': {
@@ -1131,25 +1217,34 @@ NovelStorage/
             'no_volume_folders': '巻フォルダが見つかりません！',
             'folder_exists': 'フォルダ {0} が既に存在します！',
             'generating_chapters': '{0} 章テンプレートを生成中...',
-            'help_content': """一、正しい配置場所
--------------------
-NovelHelper.py は以下の構造に配置する必要があります：
-NovelStorage/
-├─ novel/
-│  ├─ あなたの小説フォルダ/
-│  │  ├─ 1[第一巻]/
-│  │  │  ├─ 1第...txt
-│  │  │  └─ ...
-│  │  ├─ 2[第二巻]/
-│  │  │  └─ ...
-│  │  └─ NovelHelper.py  ← ここに配置！
-│  └─ ...
-└─ all/  ← 素材ライブラリフォルダ
+            'novel_dir': '小説ディレクトリ:',
+            'select': '選択...',
+            'select_novel_directory': '小説ディレクトリを選択',
+            'initialize_directory': 'ディレクトリを初期化',
+            'initialize_directory_msg': 'ディレクトリが空か巻フォルダが見つかりません。自動的に初期化しますか？\n\n作成内容：\n  - 1[new_0]/（第一巻）\n  - 10個の空き章\n\n続行しますか？',
+            'check_directory_failed': 'ディレクトリのチェックに失敗しました',
+            'initialize_complete': 'ディレクトリの初期化が完了しました！',
+            'initialize_failed': 'ディレクトリの初期化に失敗しました',
+            'help_content': """一、柔軟なディレクトリ選択
+==========================================
+★ プログラムは任意の位置に配置可能 - 固定ディレクトリ構造不要
+★ GUIを通じて任意フォルダを小説ディレクトリとして選択
+★ 自動初期化を選択ディレクトリに作成
 
-二、機能説明
------------
+二、初めての設定手順
+=====================
+1. プログラムを起動
+2.「パラメータ設定」タブを開く
+3.「小説ディレクトリ」の横の「選択...」ボタンをクリック
+4. 小説を保存するフォルダを選択
+5. フォルダが空の場合、プログラムは自動初期化を尋ねます
+6.「はい」を選択すると自動作成：
+   - 1[new_0]/（第一巻、10個の空の章を含む）
+
+三、機能説明
+=============
 1. 章作成
-   - all 素材ライブラリに章テンプレートファイルを作成するために使用
+   - 小説ディレクトリに章テンプレートファイルを作成するために使用
    - 開始章と終了章は正の整数である必要があります
    - ファイル接尾辞のデフォルトは "name"
    - ファイルが既に存在する場合は自動的にスキップ
@@ -1158,6 +1253,7 @@ NovelStorage/
    - すべての巻ディレクトリを統計
    - 章を1つの完全なファイルにマージ
    - フォルダ名を変更するかどうかを選択可能（文字数接尾辞を追加）
+   - カスタムエクスポート形式（パラメータ設定を参照）
 
 3. 監視管理
    - 小説フォルダを自動監視
@@ -1165,70 +1261,107 @@ NovelStorage/
    - 2の倍数の章ごとに自動的にSummaryをトリガー
    - ログは件数でフィルタリング可能
 
-三、注意事項とリスク
--------------------
+4. 自動巻管理
+   - 新規巻フォルダを作成（「新規巻追加」をクリック）
+   - 旧巻を文字数タグでマーク [old_XXXX]
+   - 新巻を文字数タグでマーク [new_XXXX]
+
+四、ディレクトリ構造
+====================
+プログラムは任意ディレクトリ対応。自動初期化後：
+
+  your_folder/
+  ├─ 1[new_0]/         ← 第一巻（10個の空の章を含む）
+  └─ NovelHelper.ini    ← 設定ファイル
+
+五、フォルダ命名規則
+====================
+巻フォルダ：数字[巻名]
+  例：1[第一巻]、2[第二巻]、1[new_0]、2[old_12345]
+
+章ファイル：数字第...txt
+  例：1第一章_name.txt、2第二章_.txt
+
+六、注意事項とリスク
+====================
 ⚠️  重要な警告！
 
 1. ファイルバックアップ
    - 使用前に必ず重要なデータをバックアップしてください！
-   - NovelStorage フォルダ全体をコピーすることを推奨
    - 誤操作によりファイルが上書きされる可能性があります
 
-2. フォルダ名の形式
-   - 巻フォルダは「数字[巻名]」の形式に従う必要があります
-   - 例：1[第一巻]、2[第二巻]
-   - 形式に合わないフォルダは無視されます
-
-3. 章ファイルの命名
-   - 章ファイルは「数字第...txt」の形式に従う必要があります
-   - 例：1第...txt、2第...txt
-   - 形式に合わない章は無視されます
-
-4. ファイルを勝手に削除しないでください
+2. ファイルを勝手に削除しないでください
    - 監視実行中は章ファイルを勝手に削除しないでください
    - 削除により監視が異常になる可能性があります
    - 削除が必要な場合は先に監視を停止してください
 
-5. 権限の問題
+3. 権限の問題
    - フォルダとファイルの読み書き権限があることを確認してください
-   - ディスクに十分な空きがあることを確認してください
+   - 適切な権限を持つディレクトリを選択してください
 
-6. Summary機能
-   - Summaryは未定.txtを生成します
+4. Summary機能
+   - マージされたテキストファイルを生成
    - 名前変更モードはフォルダ名を変更します
    - 使用前にバックアップを確認してください！
 
-7. 監視機能
-   - 監視は15秒ごとにチェックします
-   - 自動的に2章先まで追加します
-   - デフォルトの内容が20文字を超えるとトリガーします
+5. 監視機能
+   - 監視は15秒ごとにチェック（設定可能）
+   - 自動的に2章先まで追加（設定可能）
+   - デフォルトの内容が20文字を超えるとトリガー（設定可能）
+
+七、多言語サポート
+==================
+組み込み言語：English、简体中文、日本語
+
+「パラメータ設定」タブで言語を切り替え、保存して再起動すると有効になります。
 """,
         }
     }
     
     @classmethod
     def generate_ini_file(cls):
-        config_path = os.path.join(os.path.dirname(__file__), 'NovelHelper.ini')
+        """只创建基础配置文件，翻译内容已硬编码在代码中"""
+        config_path = ConfigManager.get_config_file_path()
         if os.path.exists(config_path):
             return
         
+        # 只创建基础配置，翻译内容不需要写入INI文件
         with open(config_path, 'w', encoding='utf-8') as f:
+            f.write('[UI]\n')
+            f.write('base_font_size = 20\n')
+            f.write('base_title_size = 32\n')
+            f.write('initial_width = 1006\n')
+            f.write('initial_height = 975\n')
+            f.write('min_width = 800\n')
+            f.write('min_height = 600\n')
+            f.write('log_font_size = 16\n')
+            f.write('bg_color = #0D0208\n')
+            f.write('fg_color = #00FF41\n')
+            f.write('border_color = #00FF41\n')
+            f.write('accent_color = #00FF41\n')
+            f.write('error_color = #FF4444\n')
+            f.write('btn_bg_color = #001100\n')
+            f.write('btn_hover_color = #003300\n')
+            f.write('input_bg_color = #001100\n\n')
+            f.write('[Monitor]\n')
+            f.write('check_interval = 15\n')
+            f.write('max_ahead_chapters = 2\n')
+            f.write('min_word_count = 20\n')
+            f.write('novel_dir = \n\n')
+            f.write('[Adaptive]\n')
+            f.write('area_scale_factor = 2\n')
+            f.write('height_scale_factor = 1.2\n')
+            f.write('font_increase = 4\n\n')
+            f.write('[Environment]\n')
+            f.write('init_chapter_count = 2000\n')
+            f.write('init_copy_count = 10\n')
+            f.write('pending_delete = 0\n\n')
             f.write('[Language]\n')
-            f.write('current = en_US\n\n')
-            
-            for lang_code, translations in cls.DEFAULT_TRANSLATIONS.items():
-                f.write(f'[Language_{lang_code}]\n')
-                for key, value in translations.items():
-                    f.write(f'{key} = {value}\n')
-                f.write('\n')
+            f.write('current = zh_CN\n')
     
     @classmethod
     def load_available_languages(cls):
-        cls._available_languages = []
-        for key in ConfigManager.load_config().sections():
-            if key.startswith('Language_') and key != 'Language':
-                lang_code = key.replace('Language_', '')
-                cls._available_languages.append(lang_code)
+        cls._available_languages = list(cls.DEFAULT_TRANSLATIONS.keys())
         return cls._available_languages
     
     @classmethod
@@ -1301,9 +1434,9 @@ class MonitorThread(QThread):
     
     def init_folders(self):
         try:
-            folders = sorted(os.listdir(NOVEL_DIR), key=lambda x: (FileManager.get_volume_number(x) is None, FileManager.get_volume_number(x) or float('inf')))
+            folders = sorted(os.listdir(get_novel_dir()), key=lambda x: (FileManager.get_volume_number(x) is None, FileManager.get_volume_number(x) or float('inf')))
             for folder_name in folders:
-                folder_path = os.path.join(NOVEL_DIR, folder_name)
+                folder_path = os.path.join(get_novel_dir(), folder_name)
                 if not os.path.isdir(folder_path):
                     continue
                 
@@ -1350,14 +1483,14 @@ class MonitorThread(QThread):
     
     def check_folders(self):
         try:
-            folders = sorted(os.listdir(NOVEL_DIR), key=lambda x: (FileManager.get_volume_number(x) is None, FileManager.get_volume_number(x) or float('inf')))
+            folders = sorted(os.listdir(get_novel_dir()), key=lambda x: (FileManager.get_volume_number(x) is None, FileManager.get_volume_number(x) or float('inf')))
             
             processed_new_folder = False
             max_ahead_chapters = self.get_max_ahead_chapters()
             
             # 先检查是否有简单数字命名的新文件夹（可能是空的）
             for folder_name in folders:
-                folder_path = os.path.join(NOVEL_DIR, folder_name)
+                folder_path = os.path.join(get_novel_dir(), folder_name)
                 if not os.path.isdir(folder_path):
                     continue
                 folder_num = FileManager.get_volume_number(folder_name)
@@ -1369,12 +1502,12 @@ class MonitorThread(QThread):
             
             # 重新获取文件夹列表，因为重命名了
             if processed_new_folder:
-                folders = sorted(os.listdir(NOVEL_DIR), key=lambda x: (FileManager.get_volume_number(x) is None, FileManager.get_volume_number(x) or float('inf')))
+                folders = sorted(os.listdir(get_novel_dir()), key=lambda x: (FileManager.get_volume_number(x) is None, FileManager.get_volume_number(x) or float('inf')))
             # 正常处理文件夹
             for folder_name in folders:
                 if not self.running:
                     break
-                folder_path = os.path.join(NOVEL_DIR, folder_name)
+                folder_path = os.path.join(get_novel_dir(), folder_name)
                 if not os.path.isdir(folder_path):
                     continue
                 
@@ -1463,8 +1596,8 @@ class MonitorThread(QThread):
             
             # 查找上一卷
             prev_folder = None
-            for f in os.listdir(NOVEL_DIR):
-                f_path = os.path.join(NOVEL_DIR, f)
+            for f in os.listdir(get_novel_dir()):
+                f_path = os.path.join(get_novel_dir(), f)
                 if os.path.isdir(f_path):
                     f_num = FileManager.get_volume_number(f)
                     if f_num == prev_num:
@@ -1521,37 +1654,30 @@ class MonitorThread(QThread):
                 wc, _ = FileManager.get_word_count(f_path)
                 total_words += wc
             
-            # 步骤5：从 start_chapter+1 开始复制 max_ahead_chapters 章到新文件夹
+            # 步骤5：从 start_chapter+1 开始创建 max_ahead_chapters 个空章节
             added_count = 0
             for add_num in range(start_chapter + 1, start_chapter + max_ahead_chapters + 1):
-                chinese_num = FileManager.num_to_chinese(add_num)
-                
-                source_filename = f"{add_num}第{chinese_num}章_name.txt"
-                source_path = os.path.join(ALL_DIR, source_filename)
-                
-                dest_filename = f"{add_num}第{chinese_num}章_.txt"
+                dest_filename = FileManager.generate_chapter_name(add_num, "", include_prefix=True).rstrip('_') + '_.txt'
                 dest_path = os.path.join(folder_path, dest_filename)
                 
-                if os.path.exists(source_path):
-                    try:
-                        if os.path.exists(dest_path):
-                            os.remove(dest_path)
-                        shutil.copy2(source_path, dest_path)
-                        added_count += 1
-                        self.messages.append(f"[NEW] {folder_name}: 新增第{add_num}章")
-                    except Exception as e:
-                        logger.error(f"复制章节失败 {add_num}: {e}")
-                        import traceback
-                        logger.error(traceback.format_exc())
-                else:
-                    logger.error(f"源文件不存在: {source_path}")
+                try:
+                    if os.path.exists(dest_path):
+                        os.remove(dest_path)
+                    with open(dest_path, 'w', encoding='utf-8') as f:
+                        f.write('')
+                    added_count += 1
+                    self.messages.append(f"[NEW] {folder_name}: 新增第{add_num}章")
+                except Exception as e:
+                    logger.error(f"创建章节失败 {add_num}: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
             
             # 步骤6：重命名上一卷为 old
             prev_name = os.path.basename(prev_folder)
             if '[new_' in prev_name:
                 try:
                     old_name = re.sub(r'\[new_(\d+)\]$', f'[old_{total_words}]', prev_name)
-                    new_path = os.path.join(NOVEL_DIR, old_name)
+                    new_path = os.path.join(get_novel_dir(), old_name)
                     os.rename(prev_folder, new_path)
                     self.messages.append(f"[OLD] 自动标记旧卷: {prev_name} -> {old_name}")
                     # 移除旧卷状态
@@ -1576,7 +1702,7 @@ class MonitorThread(QThread):
             
             # 步骤8：重命名当前卷为 new
             new_folder_final_name = f"{folder_num}[new_{new_folder_word_count}]"
-            new_folder_final_path = os.path.join(NOVEL_DIR, new_folder_final_name)
+            new_folder_final_path = os.path.join(get_novel_dir(), new_folder_final_name)
             try:
                 os.rename(folder_path, new_folder_final_path)
                 self.messages.append(f"[NEW] 自动标记新卷: {folder_name} -> {new_folder_final_name}")
@@ -2356,7 +2482,7 @@ QComboBox QAbstractItemView {{
         form.addRow(self.create_suffix_label, self.name_suffix)
         
         self.output_dir = QLineEdit()
-        self.output_dir.setText(ALL_DIR)
+        self.output_dir.setText(get_novel_dir())
         self.create_dir_btn = QPushButton(LanguageManager.tr("select_directory"))
         self.create_dir_btn.clicked.connect(self.select_directory)
         dir_layout = QHBoxLayout()
@@ -2380,9 +2506,92 @@ QComboBox QAbstractItemView {{
         return widget
     
     def select_directory(self):
-        dir_path = QFileDialog.getExistingDirectory(self, LanguageManager.tr("select_directory"), ALL_DIR)
+        dir_path = QFileDialog.getExistingDirectory(self, LanguageManager.tr("select_directory"), get_novel_dir())
         if dir_path:
             self.output_dir.setText(dir_path)
+    
+    def select_novel_directory(self):
+        current_dir = self.config_novel_dir.text() or os.path.dirname(os.path.abspath(__file__))
+        dir_path = QFileDialog.getExistingDirectory(self, LanguageManager.tr("select_novel_directory"), current_dir)
+        if dir_path:
+            self.config_novel_dir.setText(dir_path)
+            # 立即保存到配置文件
+            ConfigManager.set('Monitor', 'novel_dir', dir_path)
+            self.check_and_initialize_novel_dir(dir_path)
+    
+    def check_and_initialize_novel_dir(self, dir_path):
+        """检查并初始化空的小说目录"""
+        try:
+            items = os.listdir(dir_path)
+            has_volume = False
+            for item in items:
+                item_path = os.path.join(dir_path, item)
+                if os.path.isdir(item_path) and FileManager.get_volume_number(item):
+                    has_volume = True
+                    break
+            
+            if has_volume:
+                logger.info(f"目录 {dir_path} 已包含卷文件夹，无需初始化")
+                return
+            
+            reply = QMessageBox.question(self, LanguageManager.tr("initialize_directory"), 
+                                         LanguageManager.tr("initialize_directory_msg"),
+                                         QMessageBox.Yes | QMessageBox.No,
+                                         QMessageBox.Yes)
+            if reply != QMessageBox.Yes:
+                return
+            
+            self.initialize_novel_directory(dir_path)
+            
+        except Exception as e:
+            logger.error(f"{LanguageManager.tr('check_directory_failed')}: {e}")
+    
+    def initialize_novel_directory(self, dir_path):
+        """初始化小说目录"""
+        try:
+            # 首先检查目录是否存在且可写
+            if not os.path.exists(dir_path):
+                QMessageBox.critical(self, LanguageManager.tr("error"), 
+                                    f"{LanguageManager.tr('dir_not_exist')}: {dir_path}")
+                return
+            
+            # 检查写权限
+            test_file = os.path.join(dir_path, '.test_write_permission')
+            try:
+                with open(test_file, 'w') as f:
+                    f.write('test')
+                os.remove(test_file)
+            except Exception as e:
+                QMessageBox.critical(self, LanguageManager.tr("error"), 
+                                    f"目录不可写！请检查权限或选择其他目录。\n\n错误: {str(e)}")
+                return
+            
+            config = ConfigManager.load_config()
+            init_copy_count = config.getint('Environment', 'init_copy_count', fallback=10)
+            
+            volume_dir = os.path.join(dir_path, '1[new_0]')
+            
+            if not os.path.exists(volume_dir):
+                os.makedirs(volume_dir)
+                logger.info(f"创建目录: {volume_dir}")
+            
+            for i in range(1, init_copy_count + 1):
+                dest_filename = FileManager.generate_chapter_name(i, "", include_prefix=True).rstrip('_') + '_.txt'
+                dest_path = os.path.join(volume_dir, dest_filename)
+                if not os.path.exists(dest_path):
+                    with open(dest_path, 'w', encoding='utf-8') as f:
+                        f.write('')
+            
+            logger.info(f"已在 {volume_dir} 创建 {init_copy_count} 个空章节")
+            
+            QMessageBox.information(self, LanguageManager.tr("success"), 
+                                   LanguageManager.tr("initialize_complete") + f"\n\n  - {volume_dir}")
+            
+        except Exception as e:
+            logger.error(f"{LanguageManager.tr('initialize_failed')}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            QMessageBox.critical(self, LanguageManager.tr("error"), f"{LanguageManager.tr('initialize_failed')}: {str(e)}")
     
     def create_files(self):
         try:
@@ -2487,10 +2696,11 @@ QComboBox QAbstractItemView {{
         return widget
     
     def run_summary(self):
-        if not os.path.exists(ALL_DIR):
+        novel_dir = get_novel_dir()
+        if not os.path.exists(novel_dir):
             QMessageBox.warning(self, LanguageManager.tr("env_not_initialized"), 
                                f"{LanguageManager.tr('env_init_tip')}\n"
-                               f"当前目录：{NOVEL_DIR}\n"
+                               f"当前目录：{novel_dir}\n"
                                f"{LanguageManager.tr('dir_not_exist')}")
             return
         
@@ -2498,8 +2708,8 @@ QComboBox QAbstractItemView {{
         self.summary_result.clear()
         self.progress_bar.setValue(10)
         
-        folder_path = NOVEL_DIR
-        folder_name = os.path.basename(NOVEL_DIR)
+        folder_path = novel_dir
+        folder_name = os.path.basename(novel_dir)
         output_file_path = os.path.join(folder_path, f"{folder_name}.txt")
         
         min_content_length = ConfigManager.get_int('Monitor', 'min_word_count', fallback=20)
@@ -2765,6 +2975,29 @@ QComboBox QAbstractItemView {{
         self.config_monitor_group = QGroupBox(LanguageManager.tr("monitor_config"))
         monitor_form = QFormLayout()
         
+        self.config_novel_dir = QLineEdit()
+        self.config_novel_dir.setText(ConfigManager.get('Monitor', 'novel_dir', fallback=''))
+        self.config_novel_dir_label = QLabel(LanguageManager.tr("novel_dir"))
+        self.config_novel_dir_btn = QPushButton(LanguageManager.tr("select"))
+        self.config_novel_dir_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #001100;
+                color: #00FF41;
+                border: 2px solid #00FF41;
+                padding: 5px;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background-color: #003300;
+            }
+        """)
+        self.config_novel_dir_btn.clicked.connect(self.select_novel_directory)
+        
+        novel_dir_layout = QHBoxLayout()
+        novel_dir_layout.addWidget(self.config_novel_dir)
+        novel_dir_layout.addWidget(self.config_novel_dir_btn)
+        monitor_form.addRow(self.config_novel_dir_label, novel_dir_layout)
+        
         self.config_check_interval = QSpinBox()
         self.config_check_interval.setRange(1, 300)
         self.config_check_interval.setValue(ConfigManager.get_int('Monitor', 'check_interval', fallback=15))
@@ -2947,6 +3180,7 @@ QComboBox QAbstractItemView {{
             ConfigManager.set('Monitor', 'check_interval', self.config_check_interval.value())
             ConfigManager.set('Monitor', 'max_ahead_chapters', self.config_max_ahead.value())
             ConfigManager.set('Monitor', 'min_word_count', self.config_min_word.value())
+            ConfigManager.set('Monitor', 'novel_dir', self.config_novel_dir.text())
             
             ConfigManager.set('Adaptive', 'area_scale_factor', self.config_area_scale.value())
             ConfigManager.set('Adaptive', 'height_scale_factor', self.config_height_scale.text())
@@ -3008,6 +3242,7 @@ QComboBox QAbstractItemView {{
             ConfigManager.set('Monitor', 'check_interval', self.config_check_interval.value())
             ConfigManager.set('Monitor', 'max_ahead_chapters', self.config_max_ahead.value())
             ConfigManager.set('Monitor', 'min_word_count', self.config_min_word.value())
+            ConfigManager.set('Monitor', 'novel_dir', self.config_novel_dir.text())
             
             ConfigManager.set('Adaptive', 'area_scale_factor', self.config_area_scale.value())
             ConfigManager.set('Adaptive', 'height_scale_factor', self.config_height_scale.text())
@@ -3256,11 +3491,27 @@ QComboBox QAbstractItemView {{
             self.log_info.append(msg)
     
     def start_monitor(self):
-        if not os.path.exists(ALL_DIR):
+        # 检查小说目录
+        novel_dir = get_novel_dir()
+        if not os.path.exists(novel_dir):
             QMessageBox.warning(self, LanguageManager.tr("env_not_initialized"), 
                                f"{LanguageManager.tr('env_init_tip')}\n"
-                               f"当前目录：{NOVEL_DIR}\n"
+                               f"小说目录：{novel_dir}\n"
                                f"{LanguageManager.tr('dir_not_exist')}")
+            return
+        
+        # 检查是否有卷文件夹
+        has_volumes = False
+        for item in os.listdir(novel_dir):
+            item_path = os.path.join(novel_dir, item)
+            if os.path.isdir(item_path) and FileManager.get_volume_number(item):
+                has_volumes = True
+                break
+        
+        if not has_volumes:
+            QMessageBox.warning(self, LanguageManager.tr("warning"), 
+                               f"未找到卷文件夹！\n"
+                               f"请先在「参数配置」中选择正确的小说目录，或初始化目录。")
             return
         
         self.btn_start.setEnabled(False)
@@ -3323,163 +3574,53 @@ QComboBox QAbstractItemView {{
         self.update_log_display()
     
     def create_environment(self):
-        reply = QMessageBox.question(self, LanguageManager.tr("confirm_creation"), 
-                                     f"{LanguageManager.tr('creating_runtime_env')}\n"
-                                     f"{LanguageManager.tr('create_folders')}\n"
-                                     f"{LanguageManager.tr('generate_templates')}\n"
-                                     f"{LanguageManager.tr('create_title_folder')}\n"
-                                     f"{LanguageManager.tr('copy_first_10')}\n\n"
-                                     f"{LanguageManager.tr('continue_question')}",
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-        if reply != QMessageBox.Yes:
-            return
-        
-        try:
-            config = ConfigManager.load_config()
-            init_chapter_count = config.getint('Environment', 'init_chapter_count', fallback=2000)
-            init_copy_count = config.getint('Environment', 'init_copy_count', fallback=10)
-            
-            current_script = os.path.abspath(__file__)
-            current_dir = os.path.dirname(current_script)
-            
-            base_dir = current_dir
-            
-            all_dir = os.path.join(base_dir, 'all')
-            novel_dir = os.path.join(base_dir, 'novel')
-            title_dir = os.path.join(novel_dir, 'title')
-            title_log_dir = os.path.join(title_dir, 'log')
-            title_volume_dir = os.path.join(title_dir, '1')
-            
-            if not os.path.exists(all_dir):
-                os.makedirs(all_dir)
-                logger.info(f"创建目录: {all_dir}")
-            
-            if not os.path.exists(novel_dir):
-                os.makedirs(novel_dir)
-                logger.info(f"创建目录: {novel_dir}")
-            
-            if not os.path.exists(title_dir):
-                os.makedirs(title_dir)
-                logger.info(f"创建目录: {title_dir}")
-            
-            if not os.path.exists(title_log_dir):
-                os.makedirs(title_log_dir)
-                logger.info(f"创建目录: {title_log_dir}")
-            
-            if not os.path.exists(title_volume_dir):
-                os.makedirs(title_volume_dir)
-                logger.info(f"创建目录: {title_volume_dir}")
-            
-            QMessageBox.information(self, LanguageManager.tr("progress"), f"Generating {init_chapter_count} chapter templates...")
-
-            for i in range(1, init_chapter_count + 1):
-                filename = FileManager.generate_chapter_name(i, "name") + ".txt"
-                file_path = os.path.join(all_dir, filename)
-                if not os.path.exists(file_path):
-                    with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(f"第{i}个文件\n")
-
-            logger.info(f"已在 all/ 生成 {init_chapter_count} 章模板")
-
-            for i in range(1, init_copy_count + 1):
-                source_filename = FileManager.generate_chapter_name(i, "name") + ".txt"
-                source_path = os.path.join(all_dir, source_filename)
-                dest_filename = FileManager.generate_chapter_name(i, "", False).rstrip('_') + "_.txt"
-                dest_path = os.path.join(title_volume_dir, dest_filename)
-                if os.path.exists(source_path) and not os.path.exists(dest_path):
-                    shutil.copy2(source_path, dest_path)
-            
-            logger.info(f"已复制 {init_copy_count} 章到 {title_volume_dir}")
-            
-            new_script_path = os.path.join(title_dir, 'NovelHelper.py')
-            new_script_name = 'NovelHelper.py'
-            current_script_name = os.path.basename(current_script)
-            
-            if current_script != new_script_path:
-                shutil.copy2(current_script, new_script_path)
-                logger.info(f"已复制程序到 {new_script_path}")
-                
-                delete_marker = os.path.join(current_dir, 'NovelHelper_delete_me.py')
-                try:
-                    if current_script != delete_marker:
-                        if os.path.exists(delete_marker):
-                            os.remove(delete_marker)
-                        os.rename(current_script, delete_marker)
-                        ConfigManager.set('Environment', 'pending_delete', '1')
-                        ConfigManager.set('Environment', 'old_dir', current_dir)
-                        old_ini = os.path.join(current_dir, 'NovelHelper.ini')
-                        old_ini_delete = os.path.join(current_dir, 'NovelHelper_delete_me.ini')
-                        if os.path.exists(old_ini) and not os.path.exists(old_ini_delete):
-                            try:
-                                os.rename(old_ini, old_ini_delete)
-                                logger.info(f"已将旧ini文件标记为删除: {old_ini_delete}")
-                            except Exception as e:
-                                logger.warning(f"重命名ini文件失败: {e}")
-                        logger.info(f"已将旧程序标记为删除: {delete_marker}")
-                except Exception as e:
-                    logger.warning(f"标记删除旧程序失败: {e}")
-                
-                QMessageBox.information(self, LanguageManager.tr("success"), 
-                                         f"Runtime environment created successfully!\n\n"
-                                         f"Directory structure:\n"
-                                         f"  {all_dir}\n"
-                                         f"  {novel_dir}\n"
-                                         f"  {title_dir}\n"
-                                         f"  {title_log_dir}\n"
-                                         f"  {title_volume_dir}\n\n"
-                                         f"Program moved to: {title_dir}")
-                
-                reply = QMessageBox.question(self, LanguageManager.tr("start_new_program"), 
-                                             LanguageManager.tr("start_program_now_question"),
-                                             QMessageBox.Yes | QMessageBox.No,
-                                             QMessageBox.No)
-                
-                if reply == QMessageBox.Yes:
-                    try:
-                        import subprocess
-                        env = os.environ.copy()
-                        env['NOVEL_OLD_DIR'] = current_dir
-                        subprocess.Popen([sys.executable, new_script_path], 
-                                        cwd=title_dir,
-                                        creationflags=subprocess.CREATE_NEW_CONSOLE,
-                                        env=env)
-                        logger.info(f"已启动新程序: {new_script_path}")
-                        QTimer.singleShot(500, self.close)
-                    except Exception as e:
-                        logger.error(f"Failed to start new program: {e}")
-                        QMessageBox.critical(self, LanguageManager.tr("error"), f"Failed to start new program: {str(e)}")
-            else:
-                QMessageBox.information(self, LanguageManager.tr("success"), 
-                                         f"Runtime environment created successfully!\n\n"
-                                         f"Directory structure:\n"
-                                         f"  {all_dir}\n"
-                                         f"  {novel_dir}\n"
-                                         f"  {title_dir}\n"
-                                         f"  {title_log_dir}\n"
-                                         f"  {title_volume_dir}\n\n"
-                                         f"Program is already in the correct location.")
-            
-        except Exception as e:
-            logger.error(f"Failed to create runtime environment: {e}")
-            QMessageBox.critical(self, LanguageManager.tr("error"), f"Failed to create runtime environment: {str(e)}")
+        """创建运行环境 - 已简化，现在直接跳转到参数配置选择目录"""
+        QMessageBox.information(self, LanguageManager.tr("parameter_config"), 
+                               f"请使用「参数配置」标签页中的「小说目录」功能！\n\n"
+                               f"1. 点击「参数配置」标签\n"
+                               f"2. 点击「小说目录」旁边的「选择...」按钮\n"
+                               f"3. 选择你要存放小说的文件夹\n"
+                               f"4. 如果文件夹为空，程序会询问是否自动初始化")
+        # 切换到参数配置标签
+        self.tabs.setCurrentIndex(3)
     
     def add_new_volume(self):
         """增加新卷功能"""
         try:
             logger.info("=== add_new_volume 开始 ===")
+            
+            novel_dir = get_novel_dir()
+            logger.info(f"当前小说目录: {novel_dir}")
+            
+            # 检查小说目录是否存在
+            if not os.path.exists(novel_dir):
+                QMessageBox.warning(self, LanguageManager.tr("warning"), 
+                                   f"小说目录不存在！\n目录: {novel_dir}\n请先在「参数配置」中选择正确的目录。")
+                return
+            
             # 找到当前最大的卷号
             max_vol_num = 0
-            folders = os.listdir(NOVEL_DIR)
+            try:
+                folders = os.listdir(novel_dir)
+                logger.info(f"目录内容: {folders}")
+            except Exception as e:
+                QMessageBox.warning(self, LanguageManager.tr("warning"), 
+                                   f"无法读取目录内容！请检查权限。\n错误: {str(e)}")
+                return
+            
             for folder_name in folders:
-                folder_path = os.path.join(NOVEL_DIR, folder_name)
+                folder_path = os.path.join(novel_dir, folder_name)
                 if os.path.isdir(folder_path):
                     vol_num = FileManager.get_volume_number(folder_name)
+                    logger.info(f"检查文件夹: {folder_name}, 卷号: {vol_num}")
                     if vol_num and vol_num > max_vol_num:
                         max_vol_num = vol_num
             
             if max_vol_num == 0:
-                QMessageBox.warning(self, LanguageManager.tr("warning"), "No volume folders found!")
+                QMessageBox.warning(self, LanguageManager.tr("warning"), 
+                                   f"没有找到卷文件夹！\n"
+                                   f"当前目录: {novel_dir}\n"
+                                   f"请确认这是正确的小说目录，或先初始化目录。")
                 return
             
             new_vol_num = max_vol_num + 1
@@ -3487,10 +3628,11 @@ QComboBox QAbstractItemView {{
             
             # 创建新卷文件夹（简单数字命名）
             new_folder_name = str(new_vol_num)
-            new_folder_path = os.path.join(NOVEL_DIR, new_folder_name)
+            new_folder_path = os.path.join(novel_dir, new_folder_name)
             
             if os.path.exists(new_folder_path):
-                QMessageBox.warning(self, LanguageManager.tr("warning"), f"Folder {new_folder_name} already exists!")
+                QMessageBox.warning(self, LanguageManager.tr("warning"), 
+                                   LanguageManager.tr("folder_exists").format(new_folder_name))
                 return
             
             os.makedirs(new_folder_path)
@@ -3531,148 +3673,7 @@ QComboBox QAbstractItemView {{
         logger.info("NovelHelper 关闭")
         event.accept()
 
-def cleanup_old_program():
-    old_dir = os.environ.get('NOVEL_OLD_DIR', '')
-    
-    if not old_dir:
-        try:
-            config = ConfigManager.load_config()
-            old_dir = config.get('Environment', 'old_dir', fallback='')
-        except:
-            old_dir = ''
-    
-    if not old_dir:
-        print("[CLEANUP] 未找到旧程序目录，跳过清理")
-        return
-    
-    delete_marker = os.path.join(old_dir, 'NovelHelper_delete_me.py')
-    
-    try:
-        config = ConfigManager.load_config()
-        pending_delete = config.get('Environment', 'pending_delete', fallback='0')
-    except:
-        pending_delete = '0'
-    
-    if pending_delete == '1':
-        import time
-        import glob
-        import shutil
-        
-        print(f"[CLEANUP] 检测到需要清理旧程序，路径: {old_dir}")
-        
-        for attempt in range(10):
-            try:
-                time.sleep(2.0)
-                
-                success = True
-                
-                # 1. 删除旧日志文件
-                old_logs = glob.glob(os.path.join(old_dir, 'NovelHelper_*.log'))
-                for log_file in old_logs:
-                    try:
-                        os.remove(log_file)
-                        print(f"[CLEANUP] 已删除旧日志: {log_file}")
-                    except:
-                        pass
-                
-                # 2. 删除标记的旧程序
-                old_program = os.path.join(old_dir, 'NovelHelper_delete_me.py')
-                if os.path.exists(old_program):
-                    try:
-                        os.remove(old_program)
-                        print(f"[CLEANUP] 已删除旧程序: {old_program}")
-                    except PermissionError:
-                        print(f"[CLEANUP] 第{attempt+1}次尝试：文件被占用，继续等待...")
-                        success = False
-                    except Exception as e:
-                        print(f"[CLEANUP] 删除程序异常: {e}")
-                        time.sleep(1)
-                        success = False
-                
-                # 3. 删除标记的旧ini文件
-                old_ini = os.path.join(old_dir, 'NovelHelper_delete_me.ini')
-                if os.path.exists(old_ini):
-                    try:
-                        os.remove(old_ini)
-                        print(f"[CLEANUP] 已删除旧ini文件: {old_ini}")
-                    except:
-                        pass
-                
-                # 4. 删除旧log文件夹（不管是否重命名）
-                old_log_dir = os.path.join(old_dir, 'log')
-                if os.path.exists(old_log_dir):
-                    try:
-                        shutil.rmtree(old_log_dir)
-                        print(f"[CLEANUP] 已删除旧log文件夹: {old_log_dir}")
-                    except Exception as e:
-                        print(f"[CLEANUP] 删除log文件夹异常: {e}")
-                # 同时也检查是否有标记的log文件夹
-                old_log_dir_delete = os.path.join(old_dir, 'log_delete_me')
-                if os.path.exists(old_log_dir_delete):
-                    try:
-                        shutil.rmtree(old_log_dir_delete)
-                        print(f"[CLEANUP] 已删除标记的旧log文件夹: {old_log_dir_delete}")
-                    except Exception as e:
-                        print(f"[CLEANUP] 删除标记log文件夹异常: {e}")
-                
-                if success:
-                    ConfigManager.set('Environment', 'pending_delete', '0')
-                    ConfigManager.set('Environment', 'old_dir', '')
-                    print(f"[CLEANUP] 清理完成")
-                    break
-            except Exception as e:
-                if attempt == 9:
-                    print(f"[CLEANUP] 清理失败: {e}")
-                time.sleep(1)
-    else:
-        # 清理任何标记为delete的残留文件和文件夹
-        try:
-            import shutil
-            import glob
-            # 清理旧程序
-            if os.path.exists(delete_marker):
-                try:
-                    os.remove(delete_marker)
-                    print(f"[CLEANUP] 已删除残留旧程序: {delete_marker}")
-                except:
-                    pass
-            # 清理旧ini文件
-            old_ini_delete = os.path.join(old_dir, 'NovelHelper_delete_me.ini') if old_dir else ''
-            if old_ini_delete and os.path.exists(old_ini_delete):
-                try:
-                    os.remove(old_ini_delete)
-                    print(f"[CLEANUP] 已删除残留旧ini: {old_ini_delete}")
-                except:
-                    pass
-            # 清理旧log文件夹
-            old_log_dir = os.path.join(old_dir, 'log') if old_dir else ''
-            if old_log_dir and os.path.exists(old_log_dir):
-                try:
-                    shutil.rmtree(old_log_dir)
-                    print(f"[CLEANUP] 已删除残留旧log文件夹: {old_log_dir}")
-                except:
-                    pass
-            old_log_dir_delete = os.path.join(old_dir, 'log_delete_me') if old_dir else ''
-            if old_log_dir_delete and os.path.exists(old_log_dir_delete):
-                try:
-                    shutil.rmtree(old_log_dir_delete)
-                    print(f"[CLEANUP] 已删除残留标记log文件夹: {old_log_dir_delete}")
-                except:
-                    pass
-            # 清理旧日志文件
-            if old_dir:
-                old_logs = glob.glob(os.path.join(old_dir, 'NovelHelper_*.log'))
-                for log_file in old_logs:
-                    try:
-                        os.remove(log_file)
-                        print(f"[CLEANUP] 已删除残留旧日志: {log_file}")
-                    except:
-                        pass
-        except:
-            pass
-
 if __name__ == "__main__":
-    cleanup_old_program()
     LanguageManager.generate_ini_file()
     app = QApplication(sys.argv)
     window = NovelHelper()
