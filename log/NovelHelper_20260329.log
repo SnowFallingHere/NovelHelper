@@ -1,0 +1,51 @@
+2026-03-29 18:28:22,925 - INFO - 已创建默认配置文件: E:\.novel_saver\NovelStorage\novelhelper\NovelHelper.ini
+2026-03-29 18:28:23,510 - INFO - NovelHelper 启动成功
+2026-03-29 19:02:14,418 - INFO - NovelHelper 启动成功
+2026-03-29 19:02:29,713 - INFO - 目录 H:/PSAutoRecover/title 已包含卷文件夹，无需初始化
+2026-03-29 19:02:36,140 - INFO - 监控已启动
+2026-03-29 19:02:52,999 - INFO - NovelHelper 关闭
+2026-03-29 19:02:55,607 - INFO - NovelHelper 启动成功
+2026-03-29 19:03:07,007 - INFO - 创建目录: H:/PSAutoRecover/title\all
+2026-03-29 19:03:07,008 - INFO - 创建目录: H:/PSAutoRecover/title\1[new_0]
+2026-03-29 19:03:08,043 - INFO - 已在 all/ 生成 2000 章模板
+2026-03-29 19:03:08,047 - INFO - 已复制 10 章到 H:/PSAutoRecover/title\1[new_0]
+2026-03-29 19:03:11,445 - INFO - 监控已启动
+2026-03-29 19:03:57,628 - INFO - === add_new_volume 开始 ===
+2026-03-29 19:04:45,174 - INFO - 监控已停止
+2026-03-29 19:04:46,480 - INFO - NovelHelper 关闭
+2026-03-29 19:14:54,209 - INFO - NovelHelper 启动成功
+2026-03-29 19:15:36,093 - ERROR - 初始化目录失败: [WinError 5] 拒绝访问。: 'H:/PSAutoRecover/title\\all'
+2026-03-29 19:15:47,353 - ERROR - 初始化目录失败: [WinError 5] 拒绝访问。: 'H:/PSAutoRecover/title\\all'
+2026-03-29 19:19:05,255 - INFO - NovelHelper 关闭
+2026-03-29 19:19:07,383 - INFO - NovelHelper 启动成功
+2026-03-29 19:19:28,428 - INFO - 创建目录: H:/test/1\all
+2026-03-29 19:19:28,428 - INFO - 创建目录: H:/test/1\1[new_0]
+2026-03-29 19:19:30,979 - INFO - 已在 all/ 生成 2000 章模板
+2026-03-29 19:19:30,982 - INFO - 已复制 10 章到 H:/test/1\1[new_0]
+2026-03-29 19:19:34,165 - INFO - 监控已启动
+2026-03-29 19:20:41,272 - INFO - [OK] 完成！CJK字符: 247, 非空白字符: 247
+2026-03-29 19:21:01,258 - INFO - NovelHelper 关闭
+2026-03-29 19:21:22,639 - INFO - NovelHelper 启动成功
+2026-03-29 19:21:39,065 - INFO - NovelHelper 关闭
+2026-03-29 19:23:11,584 - INFO - NovelHelper 启动成功
+2026-03-29 19:23:18,676 - INFO - 监控已启动
+2026-03-29 19:23:19,964 - INFO - === add_new_volume 开始 ===
+2026-03-29 19:23:19,964 - INFO - 当前小说目录: H:/test/1
+2026-03-29 19:23:19,965 - INFO - 目录内容: ['1.txt', '1[new_0]', 'all']
+2026-03-29 19:23:19,965 - INFO - 检查文件夹: 1[new_0], 卷号: 1
+2026-03-29 19:23:19,965 - INFO - 检查文件夹: all, 卷号: None
+2026-03-29 19:23:19,965 - INFO - Current max volume: 1, new volume: 2
+2026-03-29 19:23:19,965 - INFO - 创建新卷文件夹: H:/test/1\2
+2026-03-29 19:23:25,203 - INFO - NovelHelper 关闭
+2026-03-29 19:27:00,988 - INFO - NovelHelper 启动成功
+2026-03-29 19:53:50,591 - INFO - NovelHelper 启动成功
+2026-03-29 19:54:27,743 - INFO - NovelHelper 关闭
+2026-03-29 20:14:29,743 - INFO - NovelHelper 启动成功
+2026-03-29 20:17:18,535 - INFO - NovelHelper 关闭
+2026-03-29 20:25:11,086 - INFO - NovelHelper 启动成功
+2026-03-29 20:25:15,093 - INFO - 监控已启动
+2026-03-29 20:25:18,007 - INFO - 监控已停止
+2026-03-29 20:25:19,631 - INFO - [OK] 完成！CJK字符: 307, 非空白字符: 307
+2026-03-29 20:25:27,697 - INFO - NovelHelper 关闭
+2026-03-29 21:01:29,357 - INFO - NovelHelper 启动成功
+2026-03-29 21:01:31,392 - INFO - NovelHelper 关闭

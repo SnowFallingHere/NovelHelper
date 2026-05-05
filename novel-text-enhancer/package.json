@@ -1,0 +1,41 @@
+{
+  "name": "novel-text-enhancer",
+  "displayName": "Novel Text Enhancer",
+  "description": "小说文本增强插件 - 关键词高亮、伏笔关联、技能绑定",
+  "version": "1.0.0",
+  "publisher": "user",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "novelTextEnhancer.test",
+        "title": "NovelTextEnhancer: Test"
+      },
+      {
+        "command": "novelTextEnhancer.reloadKeywords",
+        "title": "NovelTextEnhancer: Reload Keywords"
+      },
+      {
+        "command": "novelTextEnhancer.openConfig",
+        "title": "NovelTextEnhancer: Open Settings"
+      },
+      {
+        "command": "novelTextEnhancer.createConfig",
+        "title": "NovelTextEnhancer: Create Config"
+      },
+      {
+        "command": "novelTextEnhancer.showCharacterPanel",
+        "title": "NovelTextEnhancer: 打开人物卡面板"
+      }
+    ]
+  },
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./extension.js"
+}

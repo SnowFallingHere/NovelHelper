@@ -1,93 +1,183 @@
-# NovelHelper 小说助手
+# NovelHelper - 小说助手
 
-***
+一款面向网络小说作者的桌面辅助工具，提供章节管理、自动监控、关键词追踪、关系图谱、Summary 合并等全流程写作支持。
 
-## English
+## 功能概览
 
-### Overview
-A lightweight novel writing assistant that runs in background. Monitors your writing folder and automatically handles volume management, chapter export, and placeholder generation.
+### 1. 章节与卷管理
+- **批量创建章节**：指定起始/结束编号和后缀，一键生成章节模板文件
+- **智能命名格式**：支持自定义文件名格式，兼容中文数字、英文、日文等多种风格
+- **增加新卷**：在小说目录中创建新卷文件夹，监控会自动处理后续流程
 
-### Features
-- Flexible directory selection (any folder works)
-- Auto volume management with word count tags
-- Auto chapter placeholder generation
-- Auto export with customizable format
-- Multi-language support (EN/CN/JP)
-- Real-time monitoring
+### 2. 自动监控系统
+- **实时检测**：按可配置的间隔秒数监控小说目录，检测最新章节变更
+- **自动增章**：当最新章节内容超过设定字数阈值时，自动向后追加规定数量的空章节
+- **智能卷处理**：检测到新卷文件夹时，自动清理旧卷空章节、在新卷中承接最新章节、标记旧卷/新卷字数标签
+- **自动 Summary**：每写到 2 的倍数章节时自动触发 Summary 合并
 
-### Quick Start
-1. Run `NovelHelper.exe`
-2. Go to "Parameter Configuration" → Select novel directory
-3. Click "Start Monitor"
+### 3. Summary 合并工具
+- 遍历小说目录下所有卷，统计 CJK 字符和非空白字符数量
+- 合并所有章节内容为一个完整文件
+- **两种模式**：
+  - 仅统计并收集（不重命名文件夹）
+  - 统计并重命名文件夹（旧卷标记为 `[old_字数]`，最新卷标记为 `[new_字数]`）
 
-### Folder Structure
+### 4. 关键词管理系统
+- **多类型关键词**：支持人物、技能、地点、物品、伏笔、关系、自定义等类型
+- **关键词着色**：不同类型的节点在关系图谱中以不同颜色和形状显示
+- **关系网络**：定义关键词之间的各种关系（友谊、恋情、敌对、师徒、拥有等）
+- **章节扫描**：扫描小说目录，查找关键词出现的章节及其出现次数
+- **样本配置**：内置《斗破苍穹》角色关系样本（萧炎、萧薰儿、药老等）
+
+### 5. 科幻风格关系图谱
+- 基于 PyQt5 QGraphicsView 实现的可交互关系图谱
+- 节点按类型呈现不同形状（圆形=人物、六边形=技能、菱形=物品等）
+- 关系连线支持多种样式（实线、虚线、点线）和箭头类型
+- 节点支持拖拽、悬停高亮、固定位置
+- 支持图谱缩放和平移
+
+### 6. 多语言支持
+- 内置中文（zh_CN）、英文（en_US）、日文（ja_JP）界面
+- 可随时切换语言，立即生效
+
+### 7. 完整的 UI 配置
+- 可自定义字体大小、颜色主题、窗口尺寸
+- 暗色科幻风格主题（Matrix 风格）
+- 支持自适应布局缩放
+
+## 目录结构
+
 ```
-your_folder/
-├─ 1[new_0]/     # Volume 1 (10 empty chapters)
-└─ NovelHelper.ini
+NovelHelper/
+├── NovelHelper.py              # 主程序入口
+├── NovelHelper.ini             # 配置文件
+├── NovelHelper.spec            # PyInstaller 打包配置
+├── test_novelhelper.py         # 单元测试
+│
+├── core/                       # 核心模块
+│   ├── config_manager.py       # 配置管理器（INI 读写、缓存）
+│   ├── file_manager.py         # 文件管理器（命名、格式、目录操作）
+│   └── language_manager.py     # 语言管理器（国际化、翻译）
+│
+├── models/                     # 数据模型
+│   ├── novel_model.py          # 小说模型（卷/章节结构）
+│   ├── keyword_manager.py      # 关键词管理（配置、扫描、索引）
+│   └── summary_generator.py    # Summary 生成器（统计、合并、重命名）
+│
+├── controllers/                # 业务控制器
+│   └── monitor_controller.py   # 监控控制器（文件夹监听、自动处理）
+│
+├── ui/                         # 界面组件
+│   ├── chapter_creator.py      # 章节创建器
+│   ├── network_graph.py        # 关系图谱视图（科幻风格节点/边）
+│   ├── style_theme.py          # 样式主题
+│   └── widget_factory.py       # 组件工厂
+│
+├── translations/               # 翻译文件
+│   ├── zh_CN.json
+│   └── en.json
+│
+├── novel-text-enhancer/        # VS Code 扩展（辅助插件）
+│
+├── log/                        # 运行日志
+├── build/                      # PyInstaller 构建缓存
+└── dist/                       # 打包输出目录
+    └── NovelHelper.exe
 ```
 
-### Requirements
-- Windows 64-bit (EXE)
-- Python 3.7+ / PyQt5 / cn2an (Python version)
+## 快速开始
 
-### Run
+### 运行方式
+
+**方式一：直接运行源码**
+
 ```bash
-./dist/NovelHelper.exe   # EXE
-python NovelHelper.py     # Python
+pip install PyQt5 cn2an jieba
+python NovelHelper.py
 ```
 
-### Warning
-1. Backup data before use
-2. Don't delete files while monitoring
-3. Ensure write permissions
+**方式二：使用打包版**
 
-***
+从 `dist/` 目录直接运行 `NovelHelper.exe`，无需 Python 环境。
 
-## 中文
+### 首次设置
 
-### 简介
-轻量级小说写作辅助工具，后台运行。监控写作文件夹，自动处理卷管理、章节导出和占位符生成。
+1. 启动程序
+2. 进入「参数配置」标签页
+3. 点击「小说目录」旁边的「选择...」按钮
+4. 选择存放小说的文件夹
+5. 如果文件夹为空，程序会询问是否自动初始化
+6. 自动创建 `1[new_0]/` 目录（第一卷，含 10 个空章节）
+7. 回到「监控管理」标签页，点击「启动监控」
 
-### 功能
-- 灵活目录选择（任意文件夹）
-- 自动卷管理（字数标签）
-- 自动章节占位符生成
-- 自动导出（可自定义格式）
-- 多语言支持（中/英/日）
-- 实时监控
+### 工作流程
 
-### 快速开始
-1. 运行 `NovelHelper.exe`
-2. 进入「参数配置」→ 选择小说目录
-3. 点击「启动监控」
-
-### 目录结构
 ```
-你的文件夹/
-├─ 1[new_0]/     # 第一卷（含10个空章节）
-└─ NovelHelper.ini
+选定目录 → 自动初始化 → 启动监控 → 编写章节内容
+  ↓                        ↓              ↓
+自动创建章节文件       实时检测变更     写入字数>20
+  ↓                        ↓              ↓
+ Summary合并         自动增章+卷管理   触发增章
 ```
 
-### 系统要求
-- Windows 64位（EXE版）
-- Python 3.7+ / PyQt5 / cn2an（Python版）
+## 目录命名约定
 
-### 运行
+监控系统按照以下命名规则识别和管理卷文件夹：
+
+```
+1[new_0]/           ← 新卷（监控中，自动更新字数标签）
+2[old_98765]/       ← 旧卷（已完结，标记字数）
+3[new_12345]/       ← 当前活跃卷
+```
+
+- 纯数字文件夹名（如 `4/`）会被识别为新卷并自动添加 `[new_0]` 后缀
+- 旧卷会被标记为 `[old_字数]`
+- 当前活跃卷会被标记为 `[new_字数]`
+
+## 命名格式说明
+
+文件名格式支持丰富的占位符：
+
+| 占位符 | 说明 | 示例输出 |
+|--------|------|----------|
+| `{num}` | 阿拉伯数字 | `153` |
+| `{cn.low.Chapter}` | 中文小写章节 | `第一百五十三章` |
+| `{cn.up.Chapter}` | 中文大写章节 | `第壹佰伍拾叁章` |
+| `{cn.num.Chapter}` | 中文数字章节 | `第153章` |
+| `{en.Chapter}` | 英文章节 | `Chapter153` |
+| `{jp.Chapter}` | 日文章节 | `第一百五十三章` |
+| `{title}` / `{name}` | 标题/名称 | `_标题名` |
+| `{types:xxx}` | 文件后缀 | `.md` / `.txt` |
+
+示例格式：`{cn.low.Chapter}{title}{types:markdown}` → `1第一章_标题名.md`
+
+## 构建打包
+
+使用 PyInstaller 构建独立可执行文件：
+
 ```bash
-./dist/NovelHelper.exe   # EXE版
-python NovelHelper.py     # Python版
+pip install pyinstaller
+pyinstaller NovelHelper.spec
 ```
 
-### 注意事项
-1. 使用前备份数据
-2. 监控期间不要删除文件
-3. 确保有写入权限
+输出在 `dist/NovelHelper.exe`。
 
-***
+## 运行测试
 
-**License: MIT**
+```bash
+python test_novelhelper.py
+```
 
+测试覆盖 FileManager、LanguageManager、ConfigManager 等核心模块。
 
+## 技术栈
 
-**Made by Vibe Coding**
+- **Python 3.12** + **PyQt5**：桌面 GUI
+- **cn2an**：中文数字转换
+- **jieba**：中文分词（关键词扫描）
+- **PyInstaller**：应用打包
+- **QGraphicsView**：自定义关系图谱渲染
+
+## 许可证
+
+MIT

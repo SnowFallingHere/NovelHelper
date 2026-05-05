@@ -1,0 +1,537 @@
+2026-05-05 00:00:16,589 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:00:16,636 - INFO - NovelHelper 启动成功
+2026-05-05 00:00:32,457 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:00:41,906 - INFO - NovelHelper 关闭
+2026-05-05 00:11:18,964 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:11:18,998 - INFO - NovelHelper 启动成功
+2026-05-05 00:11:26,344 - INFO - NovelHelper 关闭
+2026-05-05 00:12:27,994 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:12:28,030 - INFO - NovelHelper 启动成功
+2026-05-05 00:12:35,014 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:12:35,758 - INFO - 创建示例配置 (zh_CN): E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-05 00:12:36,773 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:14:26,760 - INFO - NovelHelper 关闭
+2026-05-05 00:14:37,740 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:14:37,773 - INFO - NovelHelper 启动成功
+2026-05-05 00:15:08,031 - INFO - NovelHelper 关闭
+2026-05-05 00:15:14,020 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:15:14,053 - INFO - NovelHelper 启动成功
+2026-05-05 00:15:22,340 - INFO - NovelHelper 关闭
+2026-05-05 00:17:42,841 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:17:42,876 - INFO - NovelHelper 启动成功
+2026-05-05 00:17:49,789 - INFO - 创建示例配置 (zh_CN): E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-05 00:17:50,665 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:17:54,236 - INFO - 创建示例配置 (zh_CN): E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-05 00:17:55,152 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:18:08,036 - INFO - 监控已启动
+2026-05-05 00:18:15,460 - INFO - NovelHelper 关闭
+2026-05-05 00:20:09,750 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:20:09,781 - INFO - NovelHelper 启动成功
+2026-05-05 00:20:17,344 - INFO - NovelHelper 关闭
+2026-05-05 00:32:48,497 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:32:48,563 - INFO - NovelHelper 启动成功
+2026-05-05 00:33:05,408 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:33:15,388 - INFO - 神经网络图已构建
+2026-05-05 00:33:15,388 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:33:27,558 - INFO - NovelHelper 关闭
+2026-05-05 00:34:03,034 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:34:03,080 - INFO - NovelHelper 启动成功
+2026-05-05 00:34:56,392 - INFO - 神经网络图已构建
+2026-05-05 00:34:56,393 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:34:56,514 - INFO - 创建示例配置 (zh_CN): E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-05 00:34:57,632 - INFO - 神经网络图已构建
+2026-05-05 00:34:57,633 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:34:58,968 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:35:22,922 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:35:26,788 - INFO - 神经网络图已构建
+2026-05-05 00:35:26,789 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:35:30,750 - INFO - NovelHelper 关闭
+2026-05-05 00:36:46,525 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:36:46,561 - INFO - NovelHelper 启动成功
+2026-05-05 00:36:48,881 - INFO - 神经网络图已构建
+2026-05-05 00:36:48,881 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:36:57,333 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:36:58,406 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:37:15,447 - INFO - 神经网络图已构建
+2026-05-05 00:37:15,447 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:37:17,294 - INFO - NovelHelper 关闭
+2026-05-05 00:47:58,802 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:47:58,838 - INFO - NovelHelper 启动成功
+2026-05-05 00:48:01,856 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:48:18,293 - ERROR - 刷新关键词失败: setBrush(self, brush: Union[QBrush, Union[QColor, Qt.GlobalColor], QGradient]): argument 1 has unexpected type 'BrushStyle'
+2026-05-05 00:48:18,301 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4370, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4682, in render_neural_view
+    self.network_graph_view.build_graph(keywords)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2386, in build_graph
+    node = SciFiNodeItem(char.get('name', '?'), 'character', color, x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2152, in __init__
+    self._build_appearance(w, h, name, color)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2160, in _build_appearance
+    glow_rect.setBrush(Qt.NoBrush)
+TypeError: setBrush(self, brush: Union[QBrush, Union[QColor, Qt.GlobalColor], QGradient]): argument 1 has unexpected type 'BrushStyle'
+
+2026-05-05 00:48:25,332 - ERROR - 刷新关键词失败: setBrush(self, brush: Union[QBrush, Union[QColor, Qt.GlobalColor], QGradient]): argument 1 has unexpected type 'BrushStyle'
+2026-05-05 00:48:25,332 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4370, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4682, in render_neural_view
+    self.network_graph_view.build_graph(keywords)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2386, in build_graph
+    node = SciFiNodeItem(char.get('name', '?'), 'character', color, x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2152, in __init__
+    self._build_appearance(w, h, name, color)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2160, in _build_appearance
+    glow_rect.setBrush(Qt.NoBrush)
+TypeError: setBrush(self, brush: Union[QBrush, Union[QColor, Qt.GlobalColor], QGradient]): argument 1 has unexpected type 'BrushStyle'
+
+2026-05-05 00:48:26,910 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:48:28,605 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:48:32,747 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:48:36,108 - INFO - NovelHelper 关闭
+2026-05-05 00:54:14,114 - INFO - 刷新关键词，共 6 个
+2026-05-05 00:54:14,147 - INFO - NovelHelper 启动成功
+2026-05-05 00:54:19,122 - INFO - 神经网络图已构建
+2026-05-05 00:54:19,122 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:09:45,002 - INFO - NovelHelper 关闭
+2026-05-05 01:09:45,921 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:09:45,964 - INFO - NovelHelper 启动成功
+2026-05-05 01:09:48,577 - ERROR - 刷新关键词失败: name 'QFontMetrics' is not defined
+2026-05-05 01:09:48,583 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4354, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4666, in render_neural_view
+    self.network_graph_view.build_graph(keywords)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2431, in build_graph
+    node = SciFiNodeItem(char.get('name', '?'), 'character', color, x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2145, in __init__
+    fm = QFontMetrics(test_font)
+         ^^^^^^^^^^^^
+NameError: name 'QFontMetrics' is not defined
+
+2026-05-05 01:09:52,786 - INFO - NovelHelper 关闭
+2026-05-05 01:11:36,621 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:11:36,655 - INFO - NovelHelper 启动成功
+2026-05-05 01:11:38,989 - ERROR - 刷新关键词失败: name 'type_labels' is not defined
+2026-05-05 01:11:38,995 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4354, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4666, in render_neural_view
+    self.network_graph_view.build_graph(keywords)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2431, in build_graph
+    node = SciFiNodeItem(char.get('name', '?'), 'character', color, x, y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2158, in __init__
+    self._build_appearance(w, h, name, color)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2199, in _build_appearance
+    tl = QGraphicsTextItem(type_labels.get(self.node_type, 'TAG'), self)
+                           ^^^^^^^^^^^
+NameError: name 'type_labels' is not defined
+
+2026-05-05 01:11:42,275 - INFO - NovelHelper 关闭
+2026-05-05 01:13:00,958 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:13:00,992 - INFO - NovelHelper 启动成功
+2026-05-05 01:13:03,224 - ERROR - 刷新关键词失败: name 'labels' is not defined
+2026-05-05 01:13:03,229 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4354, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4666, in render_neural_view
+    self.network_graph_view.build_graph(keywords)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2459, in build_graph
+    self._add_legend(type_colors, groups)
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 2515, in _add_legend
+    lbl = QGraphicsTextItem(labels.get(t, t))
+                            ^^^^^^
+NameError: name 'labels' is not defined. Did you mean: 'QLabel'?
+
+2026-05-05 01:15:37,795 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:15:37,831 - INFO - NovelHelper 启动成功
+2026-05-05 01:15:40,567 - INFO - 神经网络图已构建
+2026-05-05 01:15:40,567 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:15:51,394 - INFO - NovelHelper 关闭
+2026-05-05 01:23:09,137 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:23:09,179 - INFO - NovelHelper 启动成功
+2026-05-05 01:23:12,087 - INFO - 神经网络图已构建
+2026-05-05 01:23:12,087 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:28:43,709 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:28:43,741 - INFO - NovelHelper 启动成功
+2026-05-05 01:28:46,991 - INFO - 神经网络图已构建
+2026-05-05 01:28:46,991 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:29:02,647 - INFO - NovelHelper 关闭
+2026-05-05 01:38:39,650 - INFO - 刷新关键词，共 6 个
+2026-05-05 01:38:39,691 - INFO - NovelHelper 启动成功
+2026-05-05 01:38:41,831 - ERROR - 刷新关键词失败: No module named 'novelhelper'
+2026-05-05 01:38:41,837 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4485, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4796, in render_neural_view
+    from novelhelper.NovelHelper import NetworkGraphView
+ModuleNotFoundError: No module named 'novelhelper'
+
+2026-05-05 01:38:45,079 - INFO - NovelHelper 关闭
+2026-05-05 02:23:03,505 - INFO - 刷新关键词，共 6 个
+2026-05-05 02:23:03,537 - INFO - 加载翻译文件: en.json
+2026-05-05 02:23:03,538 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:23:03,538 - INFO - 小说助手 started
+2026-05-05 02:23:06,346 - ERROR - 刷新关键词失败: No module named 'novelhelper'
+2026-05-05 02:23:06,351 - ERROR - Traceback (most recent call last):
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4619, in refresh_keywords
+    self.render_neural_view(keywords)  # 神经网络图用全部关键词
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\.novel_saver\NovelStorage\novelhelper\NovelHelper.py", line 4934, in render_neural_view
+    from novelhelper.NovelHelper import NetworkGraphView
+ModuleNotFoundError: No module named 'novelhelper'
+
+2026-05-05 02:23:08,987 - INFO - NovelHelper 关闭
+2026-05-05 02:43:06,027 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,030 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,060 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,060 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,060 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,060 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,060 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,061 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,061 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,061 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,067 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,067 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,068 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 02:43:06,068 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,069 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:06,069 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:06,069 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,437 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,437 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,446 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,448 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,449 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,449 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 02:43:24,449 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,450 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:43:24,450 - INFO - 加载翻译文件: en.json
+2026-05-05 02:43:24,450 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:55:21,749 - INFO - 加载翻译文件: en.json
+2026-05-05 02:55:21,750 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:56:07,134 - INFO - 加载翻译文件: en.json
+2026-05-05 02:56:07,134 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:56:07,734 - INFO - 刷新关键词，共 6 个
+2026-05-05 02:56:07,783 - INFO - 加载翻译文件: en.json
+2026-05-05 02:56:07,783 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:56:07,783 - INFO - 小说助手 started
+2026-05-05 02:56:22,680 - INFO - 神经网络图已构建
+2026-05-05 02:56:22,680 - INFO - 刷新关键词，共 6 个
+2026-05-05 02:56:51,364 - INFO - NovelHelper 关闭
+2026-05-05 02:57:26,769 - INFO - 加载翻译文件: en.json
+2026-05-05 02:57:26,769 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:57:27,404 - INFO - 刷新关键词，共 6 个
+2026-05-05 02:57:27,435 - INFO - 加载翻译文件: en.json
+2026-05-05 02:57:27,436 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 02:57:27,436 - INFO - 小说助手 started
+2026-05-05 02:57:46,704 - INFO - 监控已启动
+2026-05-05 02:57:56,431 - INFO - NovelHelper 关闭
+2026-05-05 10:37:57,172 - INFO - 小说助手 started
+2026-05-05 10:39:00,364 - INFO - 神经网络图已构建
+2026-05-05 10:44:49,555 - INFO - 小说助手 started
+2026-05-05 10:45:41,506 - INFO - 小说助手 started
+2026-05-05 10:47:24,412 - INFO - 小说助手 started
+2026-05-05 10:47:46,725 - INFO - 小说助手 started
+2026-05-05 10:58:31,393 - INFO - 小说助手 started
+2026-05-05 10:59:12,994 - INFO - 神经网络图已构建
+2026-05-05 11:01:44,798 - INFO - 小说助手 started
+2026-05-05 11:04:50,796 - INFO - 小说助手 started
+2026-05-05 11:05:06,344 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,344 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:06,344 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,344 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:06,345 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,345 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:06,345 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,346 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:06,354 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,354 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:06,355 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 11:05:06,355 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,355 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:06,355 - INFO - 加载翻译文件: en.json
+2026-05-05 11:05:06,356 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:05:27,434 - INFO - 小说助手 started
+2026-05-05 11:07:46,638 - INFO - 小说助手 started
+2026-05-05 11:08:08,763 - INFO - 小说助手 started
+2026-05-05 11:08:20,840 - INFO - 小说助手 started
+2026-05-05 11:37:36,600 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,600 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:36,600 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,600 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:36,600 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,601 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:36,601 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,601 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:36,602 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,603 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:36,603 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 11:37:36,603 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,603 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:36,603 - INFO - 加载翻译文件: en.json
+2026-05-05 11:37:36,603 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:37:48,439 - INFO - 小说助手 started
+2026-05-05 11:43:08,011 - INFO - 小说助手 started
+2026-05-05 11:43:38,330 - INFO - 神经网络图已构建
+2026-05-05 11:45:37,328 - INFO - 神经网络图已构建
+2026-05-05 11:46:09,894 - INFO - 小说助手 started
+2026-05-05 11:46:16,574 - INFO - 神经网络图已构建
+2026-05-05 11:52:00,656 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,656 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:00,656 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,656 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:00,656 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,657 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:00,657 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,657 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:00,658 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,658 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:00,659 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 11:52:00,659 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,659 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:00,659 - INFO - 加载翻译文件: en.json
+2026-05-05 11:52:00,659 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 11:52:21,595 - INFO - 小说助手 started
+2026-05-05 11:53:04,929 - INFO - 神经网络图已构建
+2026-05-05 12:20:55,773 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,773 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:20:55,773 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,773 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:20:55,773 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,774 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:20:55,774 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,774 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:20:55,775 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,775 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:20:55,776 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 12:20:55,776 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,776 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:20:55,776 - INFO - 加载翻译文件: en.json
+2026-05-05 12:20:55,776 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:21:32,416 - INFO - 小说助手 started
+2026-05-05 12:22:17,072 - INFO - 神经网络图已构建
+2026-05-05 12:27:58,642 - INFO - 小说助手 started
+2026-05-05 12:28:03,163 - INFO - 神经网络图已构建
+2026-05-05 12:29:29,458 - INFO - 小说助手 started
+2026-05-05 12:29:49,422 - INFO - 小说助手 started
+2026-05-05 12:30:06,239 - INFO - 神经网络图已构建
+2026-05-05 12:32:08,031 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,032 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:08,032 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,032 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:08,033 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,033 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:08,033 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,033 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:08,039 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,039 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:08,042 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 12:32:08,042 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,042 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:08,042 - INFO - 加载翻译文件: en.json
+2026-05-05 12:32:08,042 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:32:19,405 - INFO - 小说助手 started
+2026-05-05 12:32:46,401 - INFO - 神经网络图已构建
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,062 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:01,065 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,065 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:01,066 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 12:39:01,066 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,066 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:01,066 - INFO - 加载翻译文件: en.json
+2026-05-05 12:39:01,066 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:39:44,527 - INFO - 小说助手 started
+2026-05-05 12:40:18,573 - INFO - 小说助手 started
+2026-05-05 12:40:23,598 - INFO - 神经网络图已构建
+2026-05-05 12:41:01,512 - INFO - 小说助手 started
+2026-05-05 12:41:08,215 - INFO - 神经网络图已构建
+2026-05-05 12:41:17,658 - INFO - 神经网络图已构建
+2026-05-05 12:41:23,481 - INFO - 神经网络图已构建
+2026-05-05 12:41:33,745 - INFO - 神经网络图已构建
+2026-05-05 12:43:13,320 - INFO - 小说助手 started
+2026-05-05 12:43:25,692 - INFO - 神经网络图已构建
+2026-05-05 12:46:52,124 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,124 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:46:52,124 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,125 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:46:52,125 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,125 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:46:52,125 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,125 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:46:52,130 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,131 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:46:52,131 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 12:46:52,131 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,131 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:46:52,131 - INFO - 加载翻译文件: en.json
+2026-05-05 12:46:52,131 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 12:47:03,765 - INFO - 小说助手 started
+2026-05-05 12:47:18,989 - INFO - 神经网络图已构建
+2026-05-05 12:47:36,502 - INFO - 神经网络图已构建
+2026-05-05 12:47:39,122 - INFO - 神经网络图已构建
+2026-05-05 12:47:45,346 - INFO - 神经网络图已构建
+2026-05-05 12:53:36,988 - INFO - 小说助手 started
+2026-05-05 12:53:48,750 - INFO - 神经网络图已构建
+2026-05-05 12:56:28,108 - INFO - 小说助手 started
+2026-05-05 12:56:36,623 - INFO - 神经网络图已构建
+2026-05-05 12:57:53,281 - INFO - 小说助手 started
+2026-05-05 12:57:57,923 - INFO - 神经网络图已构建
+2026-05-05 12:58:18,522 - INFO - 神经网络图已构建
+2026-05-05 13:00:31,060 - INFO - 小说助手 started
+2026-05-05 13:00:32,491 - INFO - 小说助手 started
+2026-05-05 13:01:18,773 - INFO - 小说助手 started
+2026-05-05 13:01:28,338 - INFO - 神经网络图已构建
+2026-05-05 13:01:50,941 - INFO - 神经网络图已构建
+2026-05-05 13:05:33,895 - INFO - 小说助手 started
+2026-05-05 13:07:09,373 - INFO - 小说助手 started
+2026-05-05 13:07:35,203 - INFO - 神经网络图已构建
+2026-05-05 13:08:30,591 - INFO - Configuration saved
+2026-05-05 13:20:35,367 - INFO - 小说助手 started
+2026-05-05 13:21:49,231 - INFO - 小说助手 started
+2026-05-05 13:22:00,936 - INFO - 神经网络图已构建
+2026-05-05 13:24:04,473 - INFO - 小说助手 started
+2026-05-05 15:13:21,042 - INFO - 小说助手 started
+2026-05-05 15:16:04,999 - INFO - 小说助手 started
+2026-05-05 15:20:14,651 - INFO - 小说助手 started
+2026-05-05 15:21:50,934 - INFO - 小说助手 started
+2026-05-05 15:22:02,781 - INFO - 小说助手 started
+2026-05-05 15:22:28,083 - INFO - 小说助手 started
+2026-05-05 15:23:14,813 - INFO - 小说助手 started
+2026-05-05 15:23:17,747 - INFO - 神经网络图已构建
+2026-05-05 15:23:32,101 - INFO - 神经网络图已构建
+2026-05-05 15:26:32,479 - INFO - 小说助手 started
+2026-05-05 15:26:36,640 - INFO - 神经网络图已构建
+2026-05-05 15:33:22,401 - INFO - 小说助手 started
+2026-05-05 15:34:04,775 - INFO - 小说助手 started
+2026-05-05 15:34:35,587 - INFO - 小说助手 started
+2026-05-05 15:35:09,999 - INFO - Configuration saved
+2026-05-05 15:35:22,466 - INFO - 神经网络图已构建
+2026-05-05 15:36:37,593 - INFO - 神经网络图已构建
+2026-05-05 15:36:58,710 - INFO - 神经网络图已构建
+2026-05-05 15:38:16,865 - INFO - 神经网络图已构建
+2026-05-05 15:38:44,177 - INFO - 神经网络图已构建
+2026-05-05 15:40:20,317 - INFO - 小说助手 started
+2026-05-05 15:43:32,293 - INFO - 小说助手 started
+2026-05-05 15:48:57,959 - INFO - 小说助手 started
+2026-05-05 15:50:12,769 - INFO - Configuration saved
+2026-05-05 15:50:28,175 - INFO - Configuration saved
+2026-05-05 15:50:58,345 - INFO - Configuration saved and applied
+2026-05-05 15:51:08,976 - INFO - Configuration saved and applied
+2026-05-05 15:52:01,089 - INFO - 神经网络图已构建
+2026-05-05 15:52:50,066 - INFO - 神经网络图已构建
+2026-05-05 16:01:03,912 - INFO - 小说助手 started
+2026-05-05 16:02:13,149 - INFO - 小说助手 started
+2026-05-05 16:02:35,344 - INFO - 神经网络图已构建
+2026-05-05 16:02:53,945 - INFO - 小说助手 started
+2026-05-05 16:04:04,876 - INFO - 神经网络图已构建
+2026-05-05 16:06:37,278 - INFO - 神经网络图已构建
+2026-05-05 16:08:25,853 - INFO - 小说助手 started
+2026-05-05 16:08:41,857 - INFO - 神经网络图已构建
+2026-05-05 16:15:14,167 - INFO - 小说助手 started
+2026-05-05 16:18:27,849 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,849 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:27,850 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,850 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:27,850 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,850 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:27,851 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,851 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:27,859 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,859 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:27,860 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 16:18:27,860 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,860 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:27,861 - INFO - 加载翻译文件: en.json
+2026-05-05 16:18:27,861 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 16:18:34,455 - INFO - 小说助手 started
+2026-05-05 16:32:05,452 - INFO - 小说助手 started
+2026-05-05 16:32:53,164 - INFO - Configuration saved and applied
+2026-05-05 16:32:56,195 - INFO - Configuration saved
+2026-05-05 16:38:28,108 - INFO - 小说助手 started
+2026-05-05 16:38:47,739 - INFO - Configuration saved and applied
+2026-05-05 16:39:40,916 - INFO - Configuration saved and applied
+2026-05-05 16:42:08,073 - INFO - 小说助手 started
+2026-05-05 16:43:09,899 - INFO - Configuration saved and applied
+2026-05-05 16:45:28,352 - INFO - 重命名: 1 -> 1[new_2597]
+2026-05-05 16:45:28,353 - INFO - [OK] 完成！CJK字符: 2197, 非空白字符: 2597
+2026-05-05 16:45:46,071 - INFO - [OK] 完成！CJK字符: 2197, 非空白字符: 2597
+2026-05-05 16:59:19,414 - INFO - 小说助手 started
+2026-05-05 17:02:54,334 - INFO - 小说助手 started
+2026-05-05 17:06:33,466 - INFO - 小说助手 started
+2026-05-05 17:08:37,043 - INFO - 小说助手 started
+2026-05-05 17:11:33,585 - INFO - Configuration saved and applied
+2026-05-05 17:13:48,717 - INFO - 小说助手 started
+2026-05-05 17:17:31,388 - INFO - 小说助手 started
+2026-05-05 17:19:13,736 - INFO - Configuration saved and applied
+2026-05-05 17:21:01,745 - INFO - 小说助手 started
+2026-05-05 17:21:29,174 - INFO - 发现新文件夹状态: 1[new_0]
+2026-05-05 17:22:22,301 - INFO - Configuration saved
+2026-05-05 17:23:15,759 - INFO - Configuration saved
+2026-05-05 17:29:48,391 - INFO - 小说助手 started
+2026-05-05 17:41:18,256 - INFO - 小说助手 started
+2026-05-05 17:44:42,877 - INFO - Configuration saved
+2026-05-05 17:44:44,244 - INFO - Configuration saved and applied
+2026-05-05 17:51:49,423 - INFO - 小说助手 started
+2026-05-05 17:52:53,485 - INFO - Configuration saved
+2026-05-05 17:52:54,738 - INFO - Configuration saved and applied
+2026-05-05 17:53:27,317 - INFO - Configuration saved
+2026-05-05 17:54:53,326 - INFO - Configuration saved and applied
+2026-05-05 17:55:11,276 - INFO - Configuration saved and applied
+2026-05-05 17:55:40,468 - INFO - 小说助手 started
+2026-05-05 17:57:00,228 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,228 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 17:57:00,228 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,230 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 17:57:00,230 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,230 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 17:57:00,230 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,231 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 17:57:00,238 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,238 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 17:57:00,240 - WARNING - 翻译缺失: [zh_CN] nonexistent_key_12345
+2026-05-05 17:57:00,240 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,240 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 17:57:00,240 - INFO - 加载翻译文件: en.json
+2026-05-05 17:57:00,240 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,341 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,341 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,341 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,341 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,341 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,342 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,342 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,342 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,345 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,345 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,346 - WARNING - 翻译缺失: [ja_JP] nonexistent_key_12345
+2026-05-05 18:32:43,346 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,346 - INFO - 加载翻译文件: zh_CN.json
+2026-05-05 18:32:43,346 - INFO - 加载翻译文件: en.json
+2026-05-05 18:32:43,346 - INFO - 加载翻译文件: zh_CN.json
