@@ -4,7 +4,7 @@ import re
 import logging
 from collections import defaultdict
 from core.config_manager import ConfigManager
-from core.file_manager import file_manager, get_novel_dir
+from core.file_manager import file_manager, get_novel_dir, get_novel_config_dir, ensure_novel_config_dir
 try:
     import jieba
 except ImportError:
@@ -13,7 +13,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 class KeywordManager:
-    """关键词管理器 - 负责加载、管理关键词高亮配置"""
+    """关键词管理器 - 支持拆分存储"""
     
     KEYWORD_TYPES = {
         'foreshadowing': {'color': '#ff6b6b', 'label': '伏笔'},
@@ -24,16 +24,152 @@ class KeywordManager:
         'relationship': {'color': '#87ceeb', 'label': '关系'},
         'custom': {'color': '#c0c0c0', 'label': '自定义'}
     }
-    
+
+    ENTITY_TYPES = {'character', 'skill', 'location', 'item'}
+    FACTION_FIELDS = {'structure', 'template', 'roles'}
+
     @staticmethod
     def get_config_path():
-        """获取关键词配置文件路径 - 在当前选定的小说目录"""
-        novel_dir = get_novel_dir()
-        return os.path.join(novel_dir, '.novel-enhancer.json')
-    
+        ensure_novel_config_dir()
+        return os.path.join(get_novel_config_dir(), '.novel-enhancer.json')
+
+    @staticmethod
+    def _get_data_dir():
+        ensure_novel_config_dir()
+        return get_novel_config_dir()
+
+    @staticmethod
+    def _get_split_paths():
+        d = KeywordManager._get_data_dir()
+        return {
+            'entities':       os.path.join(d, 'entities.json'),
+            'relationships':  os.path.join(d, 'relationships.json'),
+            'factions':       os.path.join(d, 'factions.json'),
+            'workspace':      os.path.join(d, 'workspace.json'),
+        }
+
+    @staticmethod
+    def _has_split_files():
+        paths = KeywordManager._get_split_paths()
+        return os.path.exists(paths['entities'])
+
+    @staticmethod
+    def _load_from_split():
+        paths = KeywordManager._get_split_paths()
+        entities = []
+        relationships = []
+        import json
+        try:
+            if os.path.exists(paths['entities']):
+                with open(paths['entities'], 'r', encoding='utf-8') as f:
+                    entities = json.load(f)
+            if os.path.exists(paths['relationships']):
+                with open(paths['relationships'], 'r', encoding='utf-8') as f:
+                    relationships = json.load(f)
+            if os.path.exists(paths['factions']):
+                with open(paths['factions'], 'r', encoding='utf-8') as f:
+                    factions = json.load(f)
+                    entities.extend(factions)
+            if os.path.exists(paths['workspace']):
+                with open(paths['workspace'], 'r', encoding='utf-8') as f:
+                    workspace = json.load(f)
+                    if isinstance(workspace, list):
+                        entities.extend(workspace)
+                    elif isinstance(workspace, dict) and 'keywords' in workspace:
+                        entities.extend(workspace['keywords'])
+            for kw in entities:
+                if 'related' in kw and 'relationships' not in kw:
+                    kw['relationships'] = [
+                        {'target': t, 'type': 'related_to', 'description': ''}
+                        for t in kw.pop('related')
+                    ]
+            return entities
+        except Exception as e:
+            logger.error(f"从拆分文件加载失败: {e}")
+            return []
+
+    @staticmethod
+    def _save_split(keywords):
+        paths = KeywordManager._get_split_paths()
+        entities = []
+        relationships = []
+        factions = []
+        workspace = []
+        import json
+
+        for kw in keywords:
+            kw_type = kw.get('type', 'custom')
+            if kw_type in KeywordManager.ENTITY_TYPES:
+                entities.append(kw)
+            elif kw_type == 'faction':
+                factions.append(kw)
+            else:
+                workspace.append(kw)
+
+        for kw in keywords:
+            for rel in kw.get('relationships', []):
+                if isinstance(rel, dict):
+                    relationships.append({
+                        'source': kw.get('name', ''),
+                        'source_type': kw.get('type', ''),
+                        'target': rel.get('target', ''),
+                        'type': rel.get('type', ''),
+                        'description': rel.get('description', '')
+                    })
+
+        ok = True
+        try:
+            with open(paths['entities'], 'w', encoding='utf-8') as f:
+                json.dump(entities, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存 entities.json 失败: {e}")
+            ok = False
+        try:
+            with open(paths['relationships'], 'w', encoding='utf-8') as f:
+                json.dump(relationships, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存 relationships.json 失败: {e}")
+            ok = False
+        try:
+            with open(paths['factions'], 'w', encoding='utf-8') as f:
+                json.dump(factions, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存 factions.json 失败: {e}")
+            ok = False
+        try:
+            with open(paths['workspace'], 'w', encoding='utf-8') as f:
+                json.dump(workspace, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存 workspace.json 失败: {e}")
+            ok = False
+        return ok
+
+    @staticmethod
+    def migrate_to_split():
+        """一次性迁移：将旧 .novel-enhancer.json 写入拆分文件"""
+        import json
+        config_path = KeywordManager.get_config_path()
+        if not os.path.exists(config_path):
+            return False
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            keywords = data.get('keywords', [])
+            if keywords:
+                KeywordManager._save_split(keywords)
+                logger.info(f"迁移完成: {len(keywords)} 条关键词写入拆分文件")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"迁移失败: {e}")
+            return False
+
     @staticmethod
     def load_keywords():
-        """加载关键词配置"""
+        """加载关键词配置（优先从拆分文件加载，回退到旧文件）"""
+        if KeywordManager._has_split_files():
+            return KeywordManager._load_from_split()
+
         config_path = KeywordManager.get_config_path()
         if not os.path.exists(config_path):
             return []
@@ -143,17 +279,578 @@ class KeywordManager:
     
     @staticmethod
     def save_keywords(keywords):
-        """保存关键词配置"""
+        """保存关键词配置（同时写入旧文件和拆分文件）"""
         config_path = KeywordManager.get_config_path()
+        ok_old = True
         try:
             import json
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump({'keywords': keywords}, f, ensure_ascii=False, indent=2)
             logger.info(f"关键词已保存到 {config_path}")
+        except Exception as e:
+            logger.error(f"保存关键词(旧格式)失败: {e}")
+            ok_old = False
+
+        ok_split = KeywordManager._save_split(keywords)
+        return ok_old and ok_split
+
+    @staticmethod
+    def load_faction_structure(faction_name):
+        """
+        从keywords.json的faction条目提取structure字段
+
+        Args:
+            faction_name: 组织名称（如"天府联盟"）
+
+        Returns:
+            dict: structure对象，包含template, roles, metadata等
+                  若无structure字段则返回空字典 {}
+                  若找不到该组织则返回 None
+
+        注意：此方法具有完全的向后兼容性，
+        即使旧的keywords.json中faction条目没有structure字段也不会报错，
+        而是返回空字典{}供调用者判断。
+        """
+        try:
+            keywords = KeywordManager.load_keywords()
+            faction_kw = next(
+                (kw for kw in keywords if kw.get('type') == 'faction' and kw.get('name') == faction_name),
+                None
+            )
+            if faction_kw is None:
+                logger.warning(f"未找到组织: {faction_name}")
+                return None
+            return faction_kw.get('structure', {})
+        except Exception as e:
+            logger.error(f"加载组织结构失败 [{faction_name}]: {e}")
+            return {}
+
+    @staticmethod
+    def save_faction_structure(faction_name, structure):
+        """
+        写回structure字段到对应词条
+        
+        Args:
+            faction_name: 组织名称
+            structure: 完整的structure字典
+        
+        Returns:
+            bool: 是否成功保存
+        """
+        try:
+            keywords = KeywordManager.load_keywords()
+            faction_kw = next(
+                (kw for kw in keywords if kw.get('type') == 'faction' and kw.get('name') == faction_name),
+                None
+            )
+            if faction_kw is None:
+                logger.error(f"未找到组织，无法保存结构: {faction_name}")
+                return False
+            from datetime import datetime
+            structure['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            faction_kw['structure'] = structure
+            return KeywordManager.save_keywords(keywords)
+        except Exception as e:
+            logger.error(f"保存组织结构失败 [{faction_name}]: {e}")
+            return False
+
+    @staticmethod
+    def get_faction_members(faction_name):
+        """
+        解析structure.roles + relationships，返回成员列表及职位信息
+        
+        Returns:
+            list: [
+                {
+                    'name': '萧炎',
+                    'role_id': 'leader_1',
+                    'title': '盟主',
+                    'parent_role': None,
+                    'level': 0,
+                    'type': 'character'  # 从keywords中获取
+                },
+                ...
+            ]
+            仅包含已分配成员的职位（member字段非空）
+        """
+        try:
+            structure = KeywordManager.load_faction_structure(faction_name)
+            if not structure:
+                logger.warning(f"组织无结构数据或不存在: {faction_name}")
+                return []
+            keywords = KeywordManager.load_keywords()
+            kw_map = {kw.get('name'): kw.get('type', 'unknown') for kw in keywords}
+            roles = structure.get('roles', {})
+            members = []
+            for role_id, role_info in roles.items():
+                member_name = role_info.get('member')
+                if not member_name:
+                    continue
+                member_entry = {
+                    'name': member_name,
+                    'role_id': role_id,
+                    'title': role_info.get('title', ''),
+                    'parent_role': role_info.get('parent_role'),
+                    'level': role_info.get('level', 0),
+                    'type': kw_map.get(member_name, 'unknown')
+                }
+                members.append(member_entry)
+            members.sort(key=lambda x: x.get('level', 0))
+            return members
+        except Exception as e:
+            logger.error(f"获取组织成员失败 [{faction_name}]: {e}")
+            return []
+
+    @staticmethod
+    def build_family_tree(root_name, faction_name=None, depth_limit=5, visited=None):
+        """
+        基于family关系构建多叉树字典
+        
+        Args:
+            root_name: 根节点人物名称
+            faction_name: 可选，限定特定组织内的成员
+            depth_limit: 最大递归深度，防止无限循环
+        
+        Returns:
+            dict: {
+                'name': str,
+                'gender': 'male'|'female'|'unknown',  # 从keywords获取或默认unknown
+                'spouse': None|dict,  # 配偶节点（递归调用）
+                'children': [dict],   # 子女列表（递归调用）
+                'parents': [dict],     # 父母列表
+                'generation': int,     # 代际（根=0）
+                'metadata': {...}      # 其他信息
+            }
+            或 None（如果root_name不存在）
+        """
+        if visited is None:
+            visited = set()
+        if root_name in visited or depth_limit <= 0:
+            return None
+        visited.add(root_name)
+        try:
+            keywords = KeywordManager.load_keywords()
+            root_kw = next((kw for kw in keywords if kw.get('name') == root_name), None)
+            if root_kw is None:
+                logger.warning(f"构建族谱树时未找到人物: {root_name}")
+                return None
+            gender = root_kw.get('gender', 'unknown')
+            relationships = root_kw.get('relationships', [])
+            spouse_node = None
+            children_nodes = []
+            parents_nodes = []
+            faction_members = set()
+            if faction_name:
+                faction_structure = KeywordManager.load_faction_structure(faction_name)
+                if faction_structure:
+                    roles = faction_structure.get('roles', {})
+                    for role_info in roles.values():
+                        member = role_info.get('member')
+                        if member:
+                            faction_members.add(member)
+            for rel in relationships:
+                target_name = rel.get('target')
+                rel_type = rel.get('type', '')
+                if not target_name:
+                    continue
+                if faction_name and target_name not in faction_members:
+                    continue
+                # 接受更多家庭关系类型
+                if rel_type == 'spouse' or rel_type == 'romance':
+                    spouse_node = KeywordManager.build_family_tree(
+                        target_name, faction_name, depth_limit - 1, visited.copy()
+                    )
+                elif rel_type in ('parent', 'father', 'mother', 'family'):
+                    parent_node = KeywordManager.build_family_tree(
+                        target_name, faction_name, depth_limit - 1, visited.copy()
+                    )
+                    if parent_node:
+                        parents_nodes.append(parent_node)
+                elif rel_type in ('child', 'son', 'daughter', 'family'):
+                    child_node = KeywordManager.build_family_tree(
+                        target_name, faction_name, depth_limit - 1, visited.copy()
+                    )
+                    if child_node:
+                        children_nodes.append(child_node)
+            tree_node = {
+                'name': root_name,
+                'gender': gender,
+                'spouse': spouse_node,
+                'children': children_nodes,
+                'parents': parents_nodes,
+                'generation': 0,
+                'metadata': {
+                    'description': root_kw.get('description', ''),
+                    'personality': root_kw.get('personality', '')
+                }
+            }
+            return tree_node
+        except Exception as e:
+            logger.error(f"构建族谱树失败 [{root_name}]: {e}")
+            return None
+
+    @staticmethod
+    def _validate_faction_structure(structure):
+        """
+        数据验证逻辑
+        
+        Returns:
+            tuple: (is_valid: bool, errors: list[str])
+        
+        检测规则：
+        1. 循环引用检测（A→B→A）
+           - DFS遍历parent_role链
+           - 检测到重复访问则报错并指出环路
+        2. 成员唯一性检查
+           - 同一member不能出现在两个不同role_id中
+           - 收集所有member值，检查重复
+        3. max限制检查
+           - 对每个role统计实际分配数 vs max
+           - max不为空且实际>max则警告（不阻止）
+        """
+        errors = []
+        if not isinstance(structure, dict):
+            return False, ['structure必须为字典类型']
+        roles = structure.get('roles', {})
+        if not roles:
+            return True, []
+        
+        visited_for_cycle = set()
+        cycle_path = []
+
+        def dfs_detect_cycle(role_id):
+            if role_id in visited_for_cycle:
+                cycle_start_idx = cycle_path.index(role_id) if role_id in cycle_path else -1
+                if cycle_start_idx >= 0:
+                    cycle_str = ' → '.join(cycle_path[cycle_start_idx:] + [role_id])
+                    errors.append(f"检测到循环引用: {cycle_str}")
+                return True
+            visited_for_cycle.add(role_id)
+            cycle_path.append(role_id)
+            role_info = roles.get(role_id, {})
+            parent_role = role_info.get('parent_role')
+            if parent_role and parent_role in roles:
+                dfs_detect_cycle(parent_role)
+            cycle_path.pop()
+            return False
+
+        for role_id in roles:
+            visited_for_cycle.clear()
+            cycle_path.clear()
+            dfs_detect_cycle(role_id)
+        
+        for role_id, role_info in roles.items():
+            max_limit = role_info.get('max')
+            if max_limit is not None:
+                member_count = 1 if role_info.get('member') else 0
+                if member_count > max_limit:
+                    errors.append(f"职位超员警告: '{role_id}'最大允许{max_limit}人，当前{member_count}人")
+        is_valid = len([e for e in errors if '警告' not in e]) == 0
+        return is_valid, errors
+
+    @staticmethod
+    def get_templates_file_path():
+        """
+        获取架构模板文件的路径
+        
+        Returns:
+            str: faction_templates.json的完整路径
+        """
+        import os
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_dir, 'data', 'faction_templates.json')
+
+    @staticmethod
+    def load_faction_templates():
+        """
+        加载所有架构模板（预设 + 用户自定义）
+        
+        Returns:
+            dict: 模板字典 {template_id: template_data}
+                  若文件不存在则返回仅包含预设模板的默认字典
+        """
+        templates_path = KeywordManager.get_templates_file_path()
+        default_templates = {
+            "sect": {
+                "id": "sect",
+                "name": "宗门架构",
+                "name_en": "Sect Structure",
+                "supports_genealogy": False,
+                "levels": [
+                    {"id": "leader", "label": "宗主/掌门", "max": 1, "required": True},
+                    {"id": "elder", "label": "长老", "max": None, "required": False},
+                    {"id": "core_disciple", "label": "核心弟子", "max": 10, "required": False},
+                    {"id": "disciple", "label": "弟子", "max": None, "required": False},
+                    {"id": "outer_disciple", "label": "外门弟子", "max": None, "required": False}
+                ]
+            },
+            "family": {
+                "id": "family",
+                "name": "家族架构",
+                "name_en": "Family Structure",
+                "supports_genealogy": True,
+                "levels": [
+                    {"id": "patriarch", "label": "族长", "max": 1, "required": True},
+                    {"id": "matriarch", "label": "主母/族母", "max": 1, "required": False},
+                    {"id": "elder", "label": "宗老", "max": None, "required": False},
+                    {"id": "core_member", "label": "核心成员", "max": 20, "required": False},
+                    {"id": "member", "label": "族人", "max": None, "required": False}
+                ]
+            },
+            "western_council": {
+                "id": "western_council",
+                "name": "西方宪议",
+                "name_en": "Western Council",
+                "supports_genealogy": False,
+                "levels": [
+                    {"id": "chairman", "label": "议长/首长", "max": 1, "required": True},
+                    {"id": "senator", "label": "议员", "max": None, "required": False},
+                    {"id": "advisor", "label": "顾问", "max": 20, "required": False},
+                    {"id": "staff", "label": "职员", "max": None, "required": False}
+                ]
+            },
+            "campus": {
+                "id": "campus",
+                "name": "校园架构",
+                "name_en": "Campus Structure",
+                "supports_genealogy": False,
+                "levels": [
+                    {"id": "principal", "label": "院长/校长", "max": 1, "required": True},
+                    {"id": "vice_principal", "label": "副院长/副校长", "max": 3, "required": False},
+                    {"id": "dean", "label": "主任/系主任", "max": 10, "required": False},
+                    {"id": "teacher", "label": "教师", "max": None, "required": False},
+                    {"id": "student", "label": "学生", "max": None, "required": False}
+                ]
+            },
+            "bandit": {
+                "id": "bandit",
+                "name": "山寨架构",
+                "name_en": "Bandit Gang",
+                "supports_genealogy": False,
+                "levels": [
+                    {"id": "chief", "label": "大当家", "max": 1, "required": True},
+                    {"id": "second_chief", "label": "二当家", "max": 2, "required": False},
+                    {"id": "elite", "label": "精英", "max": 20, "required": False},
+                    {"id": "follower", "label": "喽啰", "max": None, "required": False}
+                ]
+            }
+        }
+        
+        if not os.path.exists(templates_path):
+            logger.warning(f"模板文件不存在，使用内置默认模板: {templates_path}")
+            return default_templates
+        
+        try:
+            with open(templates_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            templates = data.get('templates', {})
+            if not templates:
+                logger.warning(f"模板文件为空，使用内置默认模板")
+                return default_templates
+            logger.info(f"成功加载 {len(templates)} 个架构模板")
+            return templates
+        except Exception as e:
+            logger.error(f"加载架构模板失败: {e}，使用内置默认模板")
+            return default_templates
+
+    @staticmethod
+    def save_faction_templates(templates):
+        """
+        保存架构模板（包含用户新增的自定义模板）
+        
+        Args:
+            templates: 完整的模板字典 {template_id: template_data}
+    
+        Returns:
+            bool: 是否成功保存
+        """
+        try:
+            templates_path = KeywordManager.get_templates_file_path()
+            data = {
+                "_meta": {
+                    "version": "1.0",
+                    "description": "组织职能架构模板定义",
+                    "created_at": "2026-01-15"
+                },
+                "templates": templates
+            }
+            
+            import os
+            dir_path = os.path.dirname(templates_path)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path, exist_ok=True)
+            
+            with open(templates_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"架构模板已保存到 {templates_path}，共 {len(templates)} 个模板")
             return True
         except Exception as e:
-            logger.error(f"保存关键词失败: {e}")
+            logger.error(f"保存架构模板失败: {e}")
             return False
+
+    @staticmethod
+    def get_template_by_id(template_id):
+        """
+        获取单个模板定义
+
+        Args:
+            template_id: 模板ID（如'sect', 'family'等）
+
+        Returns:
+            dict: 模板数据，若不存在返回None
+        """
+        try:
+            templates = KeywordManager.load_faction_templates()
+            return templates.get(template_id)
+        except Exception as e:
+            logger.error(f"获取模板失败 [{template_id}]: {e}")
+            return None
+
+    @staticmethod
+    def migrate_faction_structures():
+        """
+        一键迁移工具：扫描所有faction词条，为无structure的条目初始化默认架构
+
+        功能：
+        - 加载所有keywords
+        - 筛选type=='faction'的词条
+        - 检查每个词条是否有structure字段
+        - 对无structure的词条，使用默认模板（western_council）初始化空结构
+        - 保存更新后的keywords
+
+        Returns:
+            dict: {
+                'total_factions': int,      # 总共多少个组织
+                'migrated': int,            # 成功迁移的数量
+                'skipped': int,             # 已有结构跳过的数量
+                'details': [                # 详细信息列表
+                    {
+                        'name': str,       # 组织名称
+                        'status': str,     # 'migrated' | 'skipped' | 'error'
+                        'message': str     # 说明信息
+                    }
+                ]
+            }
+
+        注意：
+        - 此方法会修改keywords.json文件！调用前应提示用户确认
+        - 默认使用western_council模板作为初始结构（用户可后续修改）
+        - 初始化的structure中roles为空字典{}，template设为'custom'
+        """
+        try:
+            keywords = KeywordManager.load_keywords()
+            factions = [kw for kw in keywords if kw.get('type') == 'faction']
+            
+            total_factions = len(factions)
+            migrated = 0
+            skipped = 0
+            details = []
+            
+            from datetime import datetime
+            
+            for faction in factions:
+                faction_name = faction.get('name', '未知组织')
+                try:
+                    if not faction.get('structure'):
+                        default_structure = {
+                            'template': 'custom',
+                            'roles': {},
+                            'metadata': {
+                                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'source': 'migration_tool',
+                                'note': '由迁移工具自动初始化'
+                            }
+                        }
+                        faction['structure'] = default_structure
+                        migrated += 1
+                        details.append({
+                            'name': faction_name,
+                            'status': 'migrated',
+                            'message': f'已初始化默认结构（custom模板）'
+                        })
+                        logger.info(f"迁移工具: 为组织 '{faction_name}' 初始化了默认structure")
+                    else:
+                        skipped += 1
+                        details.append({
+                            'name': faction_name,
+                            'status': 'skipped',
+                            'message': '已存在structure字段，跳过'
+                        })
+                except Exception as e:
+                    details.append({
+                        'name': faction_name,
+                        'status': 'error',
+                        'message': f'处理失败: {str(e)}'
+                    })
+                    logger.error(f"迁移工具: 处理组织 '{faction_name}' 时出错: {e}")
+            
+            if migrated > 0:
+                save_success = KeywordManager.save_keywords(keywords)
+                if not save_success:
+                    logger.error("迁移工具: 保存更新后的keywords失败")
+                    return {
+                        'total_factions': total_factions,
+                        'migrated': 0,
+                        'skipped': skipped,
+                        'details': [{'name': '系统', 'status': 'error', 'message': '保存文件失败'}]
+                    }
+            
+            logger.info(f"迁移工具完成: 总共{total_factions}个组织，迁移{migrated}个，跳过{skipped}个")
+            
+            return {
+                'total_factions': total_factions,
+                'migrated': migrated,
+                'skipped': skipped,
+                'details': details
+            }
+            
+        except Exception as e:
+            logger.error(f"迁移工具执行失败: {e}")
+            return {
+                'total_factions': 0,
+                'migrated': 0,
+                'skipped': 0,
+                'details': [{'name': '系统', 'status': 'error', 'message': f'执行异常: {str(e)}'}]
+            }
+
+    @staticmethod
+    def get_factions_without_structure():
+        """
+        获取所有缺少structure字段的faction词条列表（只读，不修改数据）
+
+        用于：
+        - UI上显示"有X个组织需要初始化架构"的提示
+        - 让用户决定是否执行迁移
+
+        Returns:
+            list: [
+                {
+                    'name': str,       # 组织名称
+                    'description': str # 组织描述（如果有）
+                },
+                ...
+            ]
+            若所有组织都有structure则返回空列表[]
+        """
+        try:
+            keywords = KeywordManager.load_keywords()
+            factions_without_structure = []
+            
+            for kw in keywords:
+                if kw.get('type') == 'faction':
+                    if not kw.get('structure'):
+                        factions_without_structure.append({
+                            'name': kw.get('name', '未知组织'),
+                            'description': kw.get('description', '')
+                        })
+            
+            logger.info(f"查询到 {len(factions_without_structure)} 个组织缺少structure字段")
+            return factions_without_structure
+            
+        except Exception as e:
+            logger.error(f"查询缺少structure的组织失败: {e}")
+            return []
 
     @staticmethod
     def add_relationship(from_name, to_name, rel_type, description):
@@ -177,6 +874,50 @@ class KeywordManager:
             'type': rel_type,
             'description': description
         })
+        return KeywordManager.save_keywords(keywords)
+    
+    @staticmethod
+    def remove_relationship(from_name, to_name, rel_type):
+        keywords = KeywordManager.load_keywords()
+        from_kw = next((kw for kw in keywords if kw.get('name') == from_name), None)
+        if not from_kw or 'relationships' not in from_kw:
+            return False
+        from_kw['relationships'] = [r for r in from_kw['relationships'] if not (r.get('target') == to_name and r.get('type') == rel_type)]
+        return KeywordManager.save_keywords(keywords)
+    
+    @staticmethod
+    def delete_keyword(name):
+        keywords = KeywordManager.load_keywords()
+        keywords = [kw for kw in keywords if kw.get('name') != name]
+        for kw in keywords:
+            if 'relationships' in kw:
+                kw['relationships'] = [r for r in kw['relationships'] if r.get('target') != name]
+        return KeywordManager.save_keywords(keywords)
+    
+    @staticmethod
+    def rename_keyword(old_name, new_name):
+        keywords = KeywordManager.load_keywords()
+        for kw in keywords:
+            if kw.get('name') == old_name:
+                kw['name'] = new_name
+            if 'relationships' in kw:
+                for rel in kw['relationships']:
+                    if rel.get('target') == old_name:
+                        rel['target'] = new_name
+        return KeywordManager.save_keywords(keywords)
+    
+    @staticmethod
+    def update_keyword(name, kw_type, description, color):
+        keywords = KeywordManager.load_keywords()
+        for kw in keywords:
+            if kw.get('name') == name:
+                if kw_type is not None:
+                    kw['type'] = kw_type
+                if description is not None:
+                    kw['description'] = description
+                if color is not None:
+                    kw['color'] = color
+                break
         return KeywordManager.save_keywords(keywords)
     
     @staticmethod
@@ -885,9 +1626,71 @@ class KeywordManager:
             return None
     
     @staticmethod
+    def _load_stopwords():
+        stopwords_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'res', 'stopwords.json')
+        try:
+            with open(stopwords_path, 'r', encoding='utf-8') as f:
+                return set(json.load(f))
+        except Exception:
+            logger.warning(f"停用词文件加载失败: {stopwords_path}")
+            return set()
+    
+    @staticmethod
+    def _detect_stale_words(freq, stale_ratio=3.0, stale_gap=3):
+        total_ch = freq.get("total_chapters", 0)
+        if total_ch < 5:
+            return
+        words = freq.get("words", {})
+        split_idx = max(1, total_ch // 3)
+        min_occ = ConfigManager.get_int('Frequency', 'min_occurrences', fallback=3)
+        for w, info in words.items():
+            dist = info.get("chapter_distribution", [])
+            if not dist or len(dist) < 3:
+                continue
+            front_count = sum(dist[:split_idx])
+            back_count = sum(dist[split_idx:])
+            is_stale = False
+            if front_count >= min_occ and back_count <= 1 and front_count / max(1, back_count) >= stale_ratio:
+                is_stale = True
+            if len(dist) >= stale_gap and all(v == 0 for v in dist[-stale_gap:]) and info.get("total_occurrences", 0) >= min_occ:
+                is_stale = True
+            info["is_stale"] = is_stale
+    
+    @staticmethod
     def scan_frequency(novel_dir, min_len=2, min_occ=3):
         from datetime import datetime
+        ensure_novel_config_dir()
+        freq_file_path = os.path.join(get_novel_config_dir(), ".frequency.json")
+        existing = {}
+        if os.path.exists(freq_file_path):
+            try:
+                with open(freq_file_path, 'r', encoding='utf-8') as f:
+                    existing = json.load(f)
+            except Exception:
+                pass
+        
         freq = {"scan_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "total_chapters": 0, "words": {}}
+        
+        use_stopwords = ConfigManager.get_int('Frequency', 'filter_stopwords', fallback=1) == 1
+        use_keywords_only = ConfigManager.get_int('Frequency', 'keywords_only', fallback=0) == 1
+        stopwords = set()
+        if use_stopwords:
+            stopwords = KeywordManager._load_stopwords()
+            user_sw_path = os.path.join(get_novel_config_dir(), "user_stopwords.json")
+            if os.path.exists(user_sw_path):
+                try:
+                    with open(user_sw_path, 'r', encoding='utf-8') as f:
+                        user_words = json.load(f)
+                    if isinstance(user_words, list):
+                        stopwords.update(user_words)
+                except Exception:
+                    pass
+        
+        keywords_list = KeywordManager.load_keywords() if not use_keywords_only else None
+        kw_name_set = None
+        if use_keywords_only and keywords_list:
+            kw_name_set = set(kw.get('name', '') for kw in keywords_list)
+        
         volumes = sorted([f for f in os.listdir(novel_dir) if os.path.isdir(os.path.join(novel_dir, f)) and file_manager.is_numeric_volume_folder(f)])
         ch_idx = 0
         for vol in volumes:
@@ -900,21 +1703,64 @@ class KeywordManager:
                     with open(ch_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                     if jieba:
-                        words = [w.strip() for w in jieba.cut(content) if len(w.strip()) >= min_len and not w.strip().isdigit() and not re.match(r'^[\W_]+$', w.strip())]
+                        words = [w.strip() for w in jieba.cut(content) if len(w.strip()) >= min_len]
                     else:
                         words = re.findall(r'[\u4e00-\u9fff\w]{%d,}' % min_len, content)
-                    wc = {}
+                    
+                    filtered = []
                     for w in words:
+                        w = w.strip()
+                        if not w or w.isdigit() or re.match(r'^[\W_]+$', w):
+                            continue
+                        if use_stopwords and w in stopwords:
+                            continue
+                        if use_keywords_only and kw_name_set and w not in kw_name_set:
+                            continue
+                        filtered.append(w)
+                    
+                    wc = {}
+                    for w in filtered:
                         wc[w] = wc.get(w, 0) + 1
                     for w, c in wc.items():
                         if c >= min_occ:
                             if w not in freq["words"]:
-                                freq["words"][w] = {"chapters": {}, "total_occurrences": 0, "type": "?", "status": "active"}
+                                freq["words"][w] = {"chapters": {}, "total_occurrences": 0, "type": "?", "status": "active", "chapter_distribution": [], "is_stale": False}
+                            if "chapter_distribution" not in freq["words"][w]:
+                                freq["words"][w]["chapter_distribution"] = []
                             freq["words"][w]["chapters"][str(ch_idx)] = c
                             freq["words"][w]["total_occurrences"] += c
-                except:
+                except Exception:
                     pass
+        
         freq["total_chapters"] = ch_idx
+        
+        for w in freq["words"]:
+            dist = freq["words"][w].get("chapter_distribution", [])
+            if not dist:
+                total_chapters = freq["total_chapters"]
+                dist = [0] * total_chapters
+                chapters_dict = freq["words"][w].get("chapters", {})
+                for ch_str, count in chapters_dict.items():
+                    try:
+                        ci = int(ch_str)
+                        if 0 <= ci - 1 < total_chapters:
+                            dist[ci - 1] = count
+                    except ValueError:
+                        pass
+                freq["words"][w]["chapter_distribution"] = dist
+        
+        if keywords_list:
+            kw_name_map = {kw.get('name', ''): kw.get('type', '?') for kw in keywords_list}
+            for w, info in freq["words"].items():
+                if w in kw_name_map:
+                    info["type"] = kw_name_map[w]
+        
+        stale_ratio = ConfigManager.get_float('Frequency', 'stale_ratio', fallback=3.0)
+        stale_gap = ConfigManager.get_int('Frequency', 'stale_gap', fallback=3)
+        KeywordManager._detect_stale_words(freq, stale_ratio, stale_gap)
+        
+        freq["is_replace"] = existing.get("is_replace", {})
+        
         logger.info(f"频度扫描完成: {ch_idx}章, {len(freq['words'])}词条")
         return freq
 

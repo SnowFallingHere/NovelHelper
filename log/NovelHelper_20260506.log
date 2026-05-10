@@ -1,0 +1,121 @@
+2026-05-06 09:13:43,774 - INFO - 小说助手 started
+2026-05-06 09:21:42,473 - INFO - Configuration saved and applied
+2026-05-06 09:21:52,393 - INFO - Configuration saved and applied
+2026-05-06 09:21:57,345 - INFO - Configuration saved
+2026-05-06 09:23:15,856 - INFO - 神经网络图已构建
+2026-05-06 09:32:50,697 - INFO - 神经网络图已构建
+2026-05-06 13:12:43,911 - INFO - 小说助手 started
+2026-05-06 13:13:36,248 - INFO - Configuration saved
+2026-05-06 13:13:37,879 - INFO - Configuration saved and applied
+2026-05-06 13:14:57,913 - DEBUG - Building prefix dict from the default dictionary ...
+2026-05-06 13:14:57,914 - DEBUG - Loading model from cache C:\Users\Dictator\AppData\Local\Temp\jieba.cache
+2026-05-06 13:14:58,279 - DEBUG - Loading model cost 0.365 seconds.
+2026-05-06 13:14:58,279 - DEBUG - Prefix dict has been built successfully.
+2026-05-06 13:14:58,280 - INFO - 频度扫描完成: 3章, 1词条
+2026-05-06 13:15:35,427 - INFO - 神经网络图已构建
+2026-05-06 13:18:50,114 - INFO - 小说助手 started
+2026-05-06 13:18:56,238 - INFO - 神经网络图已构建
+2026-05-06 13:21:19,937 - INFO - 小说助手 started
+2026-05-06 13:21:26,302 - INFO - 神经网络图已构建
+2026-05-06 13:22:03,726 - INFO - Configuration saved and applied
+2026-05-06 13:22:06,986 - INFO - 神经网络图已构建
+2026-05-06 13:24:43,649 - INFO - 小说助手 started
+2026-05-06 13:24:48,491 - INFO - 神经网络图已构建
+2026-05-06 13:39:39,602 - INFO - 小说助手 started
+2026-05-06 13:40:17,014 - INFO - 小说助手 started
+2026-05-06 13:43:11,174 - INFO - Configuration saved
+2026-05-06 13:43:13,135 - INFO - Configuration saved and applied
+2026-05-06 13:43:37,535 - INFO - Configuration saved and applied
+2026-05-06 13:43:43,341 - INFO - Configuration saved and applied
+2026-05-06 16:05:18,819 - INFO - 小说助手 started
+2026-05-06 16:08:13,797 - INFO - 小说助手 started
+2026-05-06 16:13:57,871 - INFO - 小说助手 started
+2026-05-06 16:16:37,781 - INFO - 小说助手 started
+2026-05-06 16:17:52,127 - INFO - 小说助手 started
+2026-05-06 16:19:22,099 - INFO - 小说助手 started
+2026-05-06 18:36:42,940 - INFO - 小说助手 started
+2026-05-06 18:42:04,617 - INFO - 小说助手 started
+2026-05-06 18:43:27,119 - INFO - Configuration saved and applied
+2026-05-06 18:43:28,967 - INFO - Configuration saved
+2026-05-06 18:51:12,903 - INFO - Configuration saved
+2026-05-06 18:51:57,958 - INFO - Configuration saved
+2026-05-06 19:43:39,185 - INFO - 小说助手 started
+2026-05-06 19:44:36,496 - INFO - 神经网络图已构建
+2026-05-06 19:45:45,429 - INFO - 小说助手 started
+2026-05-06 19:45:59,643 - INFO - 小说助手 started
+2026-05-06 19:46:04,955 - INFO - 小说助手 started
+2026-05-06 19:51:38,236 - INFO - 小说助手 started
+2026-05-06 19:54:19,307 - INFO - 神经网络图已构建
+2026-05-06 20:10:37,284 - INFO - 小说助手 started
+2026-05-06 20:11:24,021 - INFO - 小说助手 started
+2026-05-06 20:17:21,256 - INFO - 神经网络图已构建
+2026-05-06 20:23:25,419 - INFO - 小说助手 started
+2026-05-06 20:24:23,538 - INFO - Configuration saved
+2026-05-06 20:24:30,130 - INFO - Configuration saved
+2026-05-06 20:24:36,907 - INFO - Configuration saved
+2026-05-06 20:24:40,515 - INFO - Configuration saved and applied
+2026-05-06 20:24:51,425 - INFO - Configuration saved and applied
+2026-05-06 20:25:22,537 - INFO - 神经网络图已构建
+2026-05-06 20:28:19,642 - INFO - 小说助手 started
+2026-05-06 20:28:23,102 - INFO - 神经网络图已构建
+2026-05-06 20:32:16,192 - INFO - 小说助手 started
+2026-05-06 20:32:37,621 - INFO - 小说助手 started
+2026-05-06 20:36:16,679 - INFO - 小说助手 started
+2026-05-06 20:36:16,985 - INFO - 小说助手 started
+2026-05-06 20:36:23,396 - INFO - 小说助手 started
+2026-05-06 20:36:28,938 - INFO - 神经网络图已构建
+2026-05-06 20:42:09,397 - INFO - 小说助手 started
+2026-05-06 20:42:31,352 - INFO - 神经网络图已构建
+2026-05-06 20:44:18,273 - INFO - 小说助手 started
+2026-05-06 20:44:26,105 - INFO - 神经网络图已构建
+2026-05-06 21:03:10,944 - INFO - 小说助手 started
+2026-05-06 21:15:17,585 - INFO - 神经网络图已构建
+2026-05-06 21:24:09,904 - INFO - 小说助手 started
+2026-05-06 21:24:16,665 - INFO - 神经网络图已构建
+2026-05-06 21:26:13,724 - INFO - 小说助手 started
+2026-05-06 21:26:19,121 - INFO - 神经网络图已构建
+2026-05-06 21:28:39,875 - INFO - 小说助手 started
+2026-05-06 21:28:53,590 - INFO - 神经网络图已构建
+2026-05-06 21:29:43,659 - INFO - 小说助手 started
+2026-05-06 21:29:47,153 - INFO - 神经网络图已构建
+2026-05-06 21:31:17,146 - INFO - 小说助手 started
+2026-05-06 21:31:21,239 - INFO - 神经网络图已构建
+2026-05-06 21:32:18,272 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 21:35:20,206 - INFO - 小说助手 started
+2026-05-06 21:35:27,825 - INFO - 神经网络图已构建
+2026-05-06 21:36:36,321 - INFO - 小说助手 started
+2026-05-06 21:36:39,363 - INFO - 神经网络图已构建
+2026-05-06 21:36:55,991 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 21:37:47,675 - INFO - 神经网络图已构建
+2026-05-06 21:37:55,095 - INFO - 神经网络图已构建
+2026-05-06 21:45:20,059 - INFO - 小说助手 started
+2026-05-06 21:45:22,339 - INFO - 神经网络图已构建
+2026-05-06 21:45:44,407 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 21:50:17,954 - INFO - 小说助手 started
+2026-05-06 21:50:21,318 - INFO - 神经网络图已构建
+2026-05-06 21:50:59,133 - INFO - 神经网络图已构建
+2026-05-06 21:51:08,552 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 21:51:19,631 - INFO - 神经网络图已构建
+2026-05-06 21:51:34,951 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 22:15:46,357 - INFO - 小说助手 started
+2026-05-06 22:15:58,833 - INFO - 神经网络图已构建
+2026-05-06 22:16:56,979 - INFO - 小说助手 started
+2026-05-06 22:17:01,796 - INFO - 神经网络图已构建
+2026-05-06 22:17:19,840 - INFO - 神经网络图已构建
+2026-05-06 22:17:21,269 - INFO - Configuration saved and applied
+2026-05-06 22:17:36,338 - INFO - 神经网络图已构建
+2026-05-06 22:17:37,116 - INFO - Configuration saved and applied
+2026-05-06 22:19:18,853 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 22:19:22,945 - INFO - 小说助手 started
+2026-05-06 22:19:26,882 - INFO - 神经网络图已构建
+2026-05-06 22:27:35,331 - INFO - 小说助手 started
+2026-05-06 22:27:39,386 - INFO - 神经网络图已构建
+2026-05-06 22:35:31,298 - INFO - 小说助手 started
+2026-05-06 22:35:33,869 - INFO - 神经网络图已构建
+2026-05-06 22:35:46,790 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 22:36:25,917 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 22:40:23,955 - INFO - 小说助手 started
+2026-05-06 22:40:26,786 - INFO - 神经网络图已构建
+2026-05-06 22:40:34,260 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 22:40:36,499 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json
+2026-05-06 22:40:56,452 - INFO - 关键词已保存到 E:/.novel_saver/NovelStorage/novel/new\.novel-enhancer.json

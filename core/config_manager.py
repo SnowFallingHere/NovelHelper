@@ -30,30 +30,46 @@ class ConfigManager:
     
     DEFAULT_CONFIG = {
         'UI': {
-            'base_font_size': '20',
-            'base_title_size': '32',
-            'initial_width': '1100',
-            'initial_height': '975',
-            'min_width': '800',
+            'base_font_size': '14',
+            'base_title_size': '16',
+            'base_width': '1200',
+            'base_height': '800',
+            'initial_width': '1400',
+            'initial_height': '900',
+            'min_width': '900',
             'min_height': '600',
-            'log_font_size': '16',
-            'graph_font_size': '14',
-            'kwlist_font_size': '20',
-            'kwlist_title_size': '18',
-            'kwlist_font_color': '#00FF41',
-            'kwlist_font_family': 'Microsoft YaHei',
-            'card_font_size': '30',
-            'card_title_size': '20',
-            'bg_color': '#020804',
-            'fg_color': '#00FF41',
-            'border_color': '#00AA30',
-            'accent_color': '#00FF41',
-            'error_color': '#FF3333',
-            'warn_color': '#FFAA00',
-            'btn_bg_color': '#001a05',
-            'btn_hover_color': '#003310',
-            'input_bg_color': '#000d03',
-            'theme': 'matrix'
+            'log_font_size': '12',
+            'graph_font_size': '12',
+            'kwlist_font_color': '#0078D4',
+            'kwlist_font_family': 'Microsoft YaHei UI',
+            'link_italic': '1',
+            'link_bold': '0',
+            'bg_color': '#F8F9FA',
+            'fg_color': '#212529',
+            'border_color': '#DEE2E6',
+            'accent_color': '#0078D4',
+            'error_color': '#D13438',
+            'warn_color': '#FF8C00',
+            'btn_bg_color': '#0078D4',
+            'btn_hover_color': '#106EBE',
+            'input_bg_color': '#FFFFFF',
+            'theme': 'fluent',
+            'kw_h1_size': '20',
+            'kw_h1_color': '#0078D4',
+            'kw_h2_size': '18',
+            'kw_h2_color': '#107C10',
+            'kw_body_size': '14',
+            'kw_body_color': '#606060',
+            'kw_link_size': '14',
+            'kw_link_color': '#0078D4',
+            'enable_font_scaling': '1',
+            'scaling_reference_width': '1570',
+            'scaling_min': '0.8',
+            'scaling_max': '1.5',
+            'faction_tree_font_size': '14',
+            'family_tree_font_size': '13',
+            'enable_animations': '1',
+            'enable_acrylic': '1'
         },
         'Monitor': {
             'check_interval': '15',
@@ -78,18 +94,30 @@ class ConfigManager:
             'repulsion_strength': '50000',
             'node_limit': '200',
             'auto_save_layout': '1',
-            'show_grid': '1'
+            'show_grid': '1',
+            'node_min_size': '60',
+            'node_max_size': '160',
+            'node_min_brightness': '15',
+            'node_max_brightness': '65',
+            'enable_glow': '1',
+            'enable_size_sort': '1',
+            'enable_brightness_sort': '1'
         },
         'Theme': {
-            'graph_bg_color': '#060612',
-            'graph_grid_color': '#0a1a10',
+            'graph_bg_color': '#F8F9FA',
+            'graph_bg_follow_theme': '1',
+            'graph_grid_color': '#E9ECEF',
             'edge_width': '3'
         },
         'Frequency': {
             'min_word_length': '2',
             'min_occurrences': '3',
             'inactive_chapters': '3',
-            'auto_scan': '1'
+            'auto_scan': '1',
+            'filter_stopwords': '1',
+            'keywords_only': '0',
+            'stale_ratio': '3',
+            'stale_gap': '3'
         },
         'Language': {
             'current': 'zh_CN'
@@ -102,6 +130,10 @@ class ConfigManager:
             'preview_color': '#FFFFFF',
             'preview_font_size': '23',
             'format_help_font_size': '20'
+        },
+        'Stats': {
+            'volume_target_words': '100000',
+            'daily_target_words': '2000'
         }
     }
     
